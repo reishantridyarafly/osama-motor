@@ -33,60 +33,69 @@
                         <span class="hide-menu">Dashboard</span>
                     </a>
                 </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ request()->routeIs(['category.*']) ? 'active' : '' }}"
-                        href="{{ route('category.index') }}">
-                        <span>
-                            <i class="ti ti-category"></i>
-                        </span>
-                        <span class="hide-menu">Kategori</span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ request()->routeIs(['item.*']) ? 'active' : '' }}"
-                        href="{{ route('item.index') }}">
-                        <span>
-                            <i class="ti ti-box"></i>
-                        </span>
-                        <span class="hide-menu">Barang</span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ request()->routeIs(['supplier.*']) ? 'active' : '' }}"
-                        href="{{ route('supplier.index') }}">
-                        <span>
-                            <i class="ti ti-building-store"></i>
-                        </span>
-                        <span class="hide-menu">Supplier</span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ request()->routeIs(['stockIn.*']) ? 'active' : '' }}"
-                        href="{{ route('stockIn.index') }}">
-                        <span>
-                            <i class="ti ti-truck-delivery"></i>
-                        </span>
-                        <span class="hide-menu">Barang Masuk</span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ request()->routeIs(['stockOut.*']) ? 'active' : '' }}"
-                        href="{{ route('stockOut.index') }}">
-                        <span>
-                            <i class="ti ti-truck-return"></i>
-                        </span>
-                        <span class="hide-menu">Barang Keluar</span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ request()->routeIs(['report.*']) ? 'active' : '' }}"
-                        href="{{ route('report.index') }}">
-                        <span>
-                            <i class="ti ti-clipboard-text"></i>
-                        </span>
-                        <span class="hide-menu">Laporan</span>
-                    </a>
-                </li>
+                @if (auth()->user()->role == 'warehouse')
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['category.*']) ? 'active' : '' }}"
+                            href="{{ route('category.index') }}">
+                            <span>
+                                <i class="ti ti-category"></i>
+                            </span>
+                            <span class="hide-menu">Kategori</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['item.*']) ? 'active' : '' }}"
+                            href="{{ route('item.index') }}">
+                            <span>
+                                <i class="ti ti-box"></i>
+                            </span>
+                            <span class="hide-menu">Barang</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (auth()->user()->role != 'supplier')
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['stockIn.*']) ? 'active' : '' }}"
+                            href="{{ route('stockIn.index') }}">
+                            <span>
+                                <i class="ti ti-truck-delivery"></i>
+                            </span>
+                            <span class="hide-menu">Barang Masuk</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['stockOut.*']) ? 'active' : '' }}"
+                            href="{{ route('stockOut.index') }}">
+                            <span>
+                                <i class="ti ti-truck-return"></i>
+                            </span>
+                            <span class="hide-menu">Barang Keluar</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (auth()->user()->role == 'owner')
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['supplier.*']) ? 'active' : '' }}"
+                            href="{{ route('supplier.index') }}">
+                            <span>
+                                <i class="ti ti-building-store"></i>
+                            </span>
+                            <span class="hide-menu">Supplier</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['report.*']) ? 'active' : '' }}"
+                            href="{{ route('report.index') }}">
+                            <span>
+                                <i class="ti ti-clipboard-text"></i>
+                            </span>
+                            <span class="hide-menu">Laporan</span>
+                        </a>
+                    </li>
+                @endif
+
                 <li class="sidebar-item">
                     <a class="sidebar-link {{ request()->routeIs(['profile.*']) ? 'active' : '' }}"
                         href="{{ route('profile.index') }}">

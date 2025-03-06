@@ -31,6 +31,10 @@ class StockInController extends Controller
           return \Carbon\Carbon::parse($data->date)->translatedFormat('l, d F Y');
         })
         ->addColumn('action', function ($data) {
+          if (auth()->user()->role !== 'warehouse') {
+            return '';
+          }
+
           return '
                   <div class="dropdown dropstart">
                       <a href="javascript:void(0)" class="text-muted" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">

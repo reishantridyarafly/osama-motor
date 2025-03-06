@@ -30,14 +30,16 @@
             <div class="datatables">
                 <div class="card">
                     <div class="card-body">
-                        <div class="ms-auto">
-                            <div class="d-flex justify-content-end mb-3">
-                                <button class="btn btn-primary" id="btnAdd">
-                                    <i class="ti ti-plus me-1"></i>
-                                    <span>Tambah @yield('title')</span>
-                                </button>
+                        @if (auth()->user()->role == 'warehouse')
+                            <div class="ms-auto">
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button class="btn btn-primary" id="btnAdd">
+                                        <i class="ti ti-plus me-1"></i>
+                                        <span>Tambah @yield('title')</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        @endif
                         <div class="table-responsive">
                             <table id="datatable" class="table text-nowrap align-middle">
                                 <thead>
@@ -48,7 +50,9 @@
                                         <th>Harga Satuan</th>
                                         <th>Supplier</th>
                                         <th>Tanggal</th>
-                                        <th width="10%">Aksi</th>
+                                        @if (auth()->user()->role == 'warehouse')
+                                            <th width="10%">Aksi</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -161,12 +165,14 @@
                         data: 'date',
                         name: 'date'
                     },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
-                    }
+                    @if (auth()->user()->role == 'warehouse')
+                        {
+                            data: 'action',
+                            name: 'action',
+                            orderable: false,
+                            searchable: false
+                        }
+                    @endif
                 ]
             });
 
