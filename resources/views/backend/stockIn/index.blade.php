@@ -46,6 +46,7 @@
                                         <th>Nama Barang</th>
                                         <th>Qty</th>
                                         <th>Harga Satuan</th>
+                                        <th>Supplier</th>
                                         <th>Tanggal</th>
                                         <th width="10%">Aksi</th>
                                     </tr>
@@ -72,6 +73,16 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <input type="hidden" name="id" id="id">
+                            <label for="supplier" class="form-label">Supplier <span class="text-danger">*</span></label>
+                            <select class="form-control" id="supplier" name="supplier">
+                                <option value="">-- Pilih Supplier --</option>
+                                @foreach ($suppliers as $supplier)
+                                    <option value="{{ $supplier->id }}">{{ $supplier->first_name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-danger errorSupplier"></small>
+                        </div>
+                        <div class="mb-3">
                             <label for="item" class="form-label">Barang <span class="text-danger">*</span></label>
                             <select class="form-control" id="item" name="item">
                                 <option value="">-- Pilih Barang --</option>
@@ -143,6 +154,10 @@
                         name: 'unit_cost'
                     },
                     {
+                        data: 'supplier',
+                        name: 'supplier'
+                    },
+                    {
                         data: 'date',
                         name: 'date'
                     },
@@ -156,14 +171,22 @@
             });
 
             $('#btnAdd').click(function() {
-                $('#form')[0].reset();
                 $('#id').val('');
                 $('#modalLabel').html("Tambah Barang Masuk");
                 $('#modal').modal('show');
                 $('#form').trigger("reset");
 
-                $('.form-control').removeClass('is-invalid');
-                $('.text-danger').html('');
+                $('#supplier').removeClass('is-invalid');
+                $('.errorSupplier').html('');
+
+                $('#item').removeClass('is-invalid');
+                $('.errorItem').html('');
+
+                $('#quantity').removeClass('is-invalid');
+                $('.errorQuantity').html('');
+
+                $('#unit_cost').removeClass('is-invalid');
+                $('.errorUnitCost').html('');
             });
 
             $('body').on('click', '#btnEdit', function() {
@@ -177,10 +200,20 @@
                         $('#save').val("edit-barang-masuk");
                         $('#modal').modal('show');
 
-                        $('.form-control').removeClass('is-invalid');
-                        $('.text-danger').html('');
+                        $('#supplier').removeClass('is-invalid');
+                        $('.errorSupplier').html('');
+
+                        $('#item').removeClass('is-invalid');
+                        $('.errorItem').html('');
+
+                        $('#quantity').removeClass('is-invalid');
+                        $('.errorQuantity').html('');
+
+                        $('#unit_cost').removeClass('is-invalid');
+                        $('.errorUnitCost').html('');
 
                         $('#id').val(response.id);
+                        $('#supplier').val(response.supplier_id);
                         $('#item').val(response.item_id);
                         $('#quantity').val(response.quantity);
 
@@ -215,6 +248,15 @@
                     },
                     success: function(response) {
                         if (response.errors) {
+                            if (response.errors.supplier) {
+                                $('#supplier').addClass('is-invalid');
+                                $('.errorSupplier').html(response.errors.supplier.join(
+                                    '<br>'));
+                            } else {
+                                $('#supplier').removeClass('is-invalid');
+                                $('.errorSupplier').html('');
+                            }
+
                             if (response.errors.item) {
                                 $('#item').addClass('is-invalid');
                                 $('.errorItem').html(response.errors.item.join(

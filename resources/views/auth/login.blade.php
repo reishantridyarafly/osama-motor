@@ -10,7 +10,7 @@
                 </a>
                 <form id="form">
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username (Email / No Telepon) <span
+                        <label for="username" class="form-label">Email / No Telepon <span
                                 class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="username" name="username">
                         <small class="text-danger errorUsername mt-2"></small>

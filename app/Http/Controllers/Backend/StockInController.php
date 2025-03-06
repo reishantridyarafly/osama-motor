@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\StockIn;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\DataTables;
@@ -14,11 +15,14 @@ class StockInController extends Controller
   public function index(Request $request)
   {
     if ($request->ajax()) {
-      $stockIn = StockIn::with('item')->orderBy('date', 'asc')->get();
+      $stockIn = StockIn::with('item')->orderBy('created_at', 'asc')->get();
       return DataTables::of($stockIn)
         ->addIndexColumn()
         ->addColumn('item', function ($data) {
           return $data->item->name ?? null;
+        })
+        ->addColumn('supplier', function ($data) {
+          return $data->supplier->first_name ?? null;
         })
         ->addColumn('unit_cost', function ($data) {
           return 'Rp ' . number_format($data->unit_cost, 0, ',', '.');
@@ -50,17 +54,24 @@ class StockInController extends Controller
         ->make(true);
     }
     $items = Item::orderBy('name', 'asc')->get();
-    return view('backend.stockIn.index', compact('items'));
+    $suppliers = User::where('id', '!=', auth()->user()->id)
+      ->where('role', 'supplier')
+      ->orderBy('first_name', 'asc')
+      ->get();
+    return view('backend.stockIn.index', compact(['items', 'suppliers']));
   }
 
   public function store(Request $request)
   {
     $id = $request->id;
     $validated = Validator::make($request->all(), [
+      'supplier' => 'required|exists:users,id',
       'item' => 'required|exists:items,id',
       'quantity' => 'required|integer|min:1',
       'unit_cost' => 'required',
     ], [
+      'supplier.required' => 'Silakan pilih supplier terlebih dahulu.',
+      'supplier.exists' => 'Supplier yang dipilih tidak valid.',
       'item.required' => 'Silakan pilih barang terlebih dahulu.',
       'item.exists' => 'Barang yang dipilih tidak valid.',
       'quantity.required' => 'Silakan isi quantity terlebih dahulu.',
@@ -79,6 +90,7 @@ class StockInController extends Controller
             'quantity' => $request->quantity,
             'unit_cost' => str_replace(['Rp', ' ', '.'], '', $request->unit_cost),
             'item_id' => $request->item,
+            'supplier_id' => $request->supplier,
           ]);
         } else {
           StockIn::create([
@@ -86,6 +98,7 @@ class StockInController extends Controller
             'date' => now(),
             'unit_cost' => str_replace(['Rp', ' ', '.'], '', $request->unit_cost),
             'item_id' => $request->item,
+            'supplier_id' => $request->supplier,
           ]);
         }
         return response()->json([

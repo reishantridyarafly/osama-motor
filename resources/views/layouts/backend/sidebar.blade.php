@@ -52,12 +52,39 @@
                     </a>
                 </li>
                 <li class="sidebar-item">
+                    <a class="sidebar-link {{ request()->routeIs(['supplier.*']) ? 'active' : '' }}"
+                        href="{{ route('supplier.index') }}">
+                        <span>
+                            <i class="ti ti-building-store"></i>
+                        </span>
+                        <span class="hide-menu">Supplier</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
                     <a class="sidebar-link {{ request()->routeIs(['stockIn.*']) ? 'active' : '' }}"
                         href="{{ route('stockIn.index') }}">
                         <span>
                             <i class="ti ti-truck-delivery"></i>
                         </span>
                         <span class="hide-menu">Barang Masuk</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link {{ request()->routeIs(['stockOut.*']) ? 'active' : '' }}"
+                        href="{{ route('stockOut.index') }}">
+                        <span>
+                            <i class="ti ti-truck-return"></i>
+                        </span>
+                        <span class="hide-menu">Barang Keluar</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link {{ request()->routeIs(['report.*']) ? 'active' : '' }}"
+                        href="{{ route('report.index') }}">
+                        <span>
+                            <i class="ti ti-clipboard-text"></i>
+                        </span>
+                        <span class="hide-menu">Laporan</span>
                     </a>
                 </li>
                 <li class="sidebar-item">

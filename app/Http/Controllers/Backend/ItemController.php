@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Item;
+use App\Models\StockIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\DataTables;
@@ -20,8 +21,9 @@ class ItemController extends Controller
                 ->addColumn('category', function ($data) {
                     return $data->category->name ?? null;
                 })
-                ->addColumn('price', function ($data) {
-                    return 'Rp ' . number_format($data->price, 0, ',', '.');
+                ->addColumn('total_stock', function ($data) {
+                    $stock = StockIn::where('item_id', $data->id)->sum('quantity');
+                    return $stock;
                 })
                 ->addColumn('action', function ($data) {
                     return '
@@ -58,13 +60,11 @@ class ItemController extends Controller
             $request->all(),
             [
                 'name' => 'required|unique:items,name,' . $id,
-                'price' => 'required',
                 'category' => 'required',
             ],
             [
                 'name.required' => 'Silakan isi barang terlebih dahulu.',
                 'name.unique' => 'Nama barang sudah tersedia.',
-                'price.required' => 'Silakan isi harga terlebih dahulu.',
                 'category.required' => 'Silakan pilih kategori terlebih dahulu.',
             ]
         );
@@ -77,7 +77,6 @@ class ItemController extends Controller
                     'id' => $id
                 ], [
                     'name' => $request->name,
-                    'price' =>  str_replace(['Rp', ' ', '.'], '', $request->price),
                     'category_id' => $request->category,
                 ]);
 

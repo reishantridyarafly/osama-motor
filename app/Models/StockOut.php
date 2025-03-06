@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Ramsey\Uuid\Uuid;
 
-class Item extends Model
+class StockOut extends Model
 {
     protected $guarded = [];
 
@@ -31,18 +31,8 @@ class Item extends Model
         return 'string';
     }
 
-    public function category()
+    public function item()
     {
-        return $this->belongsTo(Category::class);
-    }
-
-    public function stockIns()
-    {
-        return $this->hasMany(StockIn::class);
-    }
-
-    public function stockOuts()
-    {
-        return $this->hasMany(StockOut::class);
+        return $this->belongsTo(Item::class);
     }
 }

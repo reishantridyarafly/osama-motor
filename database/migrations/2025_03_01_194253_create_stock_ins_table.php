@@ -17,7 +17,9 @@ return new class extends Migration
             $table->date('date');
             $table->decimal('unit_cost', 15, 2);
             $table->uuid('item_id');
+            $table->uuid('supplier_id');
             $table->foreign('item_id')->references('id')->on('items')->onDelete('cascade');
+            $table->foreign('supplier_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

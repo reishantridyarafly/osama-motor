@@ -73,4 +73,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function stockIns()
+    {
+        return $this->hasMany(StockIn::class, 'supplier_id');
+    }
 }

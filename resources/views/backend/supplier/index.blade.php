@@ -1,5 +1,5 @@
 @extends('layouts.backend.main')
-@section('title', 'Barang')
+@section('title', 'Supplier')
 @section('content')
     <div class="body-wrapper">
         <div class="container-fluid">
@@ -44,8 +44,9 @@
                                     <tr>
                                         <th width="3%">#</th>
                                         <th>Nama</th>
-                                        <th>Stok</th>
-                                        <th>Kategori</th>
+                                        <th>No Telepon</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
                                         <th width="10%">Aksi</th>
                                     </tr>
                                 </thead>
@@ -69,21 +70,26 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <input type="hidden" name="id" id="id">
-                            <label for="name" class="form-label">Nama <span class="text-danger">*</span></label>
-                            <input type="text" id="name" name="name" class="form-control" autofocus>
-                            <small class="text-danger errorName"></small>
+                        <div class="col-lg-12">
+                            <div class="row">
+                                <div class="mb-3">
+                                    <input type="hidden" name="id" id="id">
+                                    <label for="first_name" class="form-label">Nama <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" id="first_name" name="first_name" class="form-control" autofocus>
+                                    <small class="text-danger errorFirstName"></small>
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label for="category" class="form-label">Kategori <span class="text-danger">*</span></label>
-                            <select name="category" id="category" class="form-control">
-                                <option value="">-- Pilih kategori --</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                            <small class="text-danger errorCategory"></small>
+                            <label for="telephone" class="form-label">No Telepon <span class="text-danger">*</span></label>
+                            <input type="text" id="telephone" name="telephone" class="form-control">
+                            <small class="text-danger errorTelephone"></small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="email" name="email" class="form-control">
+                            <small class="text-danger errorEmail"></small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -108,7 +114,7 @@
             $('#datatable').DataTable({
                 processing: true,
                 serverside: true,
-                ajax: "{{ route('item.index') }}",
+                ajax: "{{ route('supplier.index') }}",
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -116,16 +122,20 @@
                         searchable: false
                     },
                     {
-                        data: 'name',
-                        name: 'name'
+                        data: 'first_name',
+                        name: 'first_name'
                     },
                     {
-                        data: 'total_stock',
-                        name: 'total_stock'
+                        data: 'telephone',
+                        name: 'telephone'
                     },
                     {
-                        data: 'category',
-                        name: 'category'
+                        data: 'email',
+                        name: 'email'
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
                     },
                     {
                         data: 'action',
@@ -137,35 +147,45 @@
             });
 
             $('#btnAdd').click(function() {
-                $('#form')[0].reset();
                 $('#id').val('');
-                $('#modalLabel').html("Tambah Barang");
+                $('#modalLabel').html("Tambah Supplier");
                 $('#modal').modal('show');
+                $('#form').trigger("reset");
 
-                $('.form-control').removeClass('is-invalid');
-                $('.text-danger').html('');
+                $('#first_name').removeClass('is-invalid');
+                $('.errorFirstName').html('');
+
+                $('#telephone').removeClass('is-invalid');
+                $('.errorTelephone').html('');
+
+                $('#email').removeClass('is-invalid');
+                $('.errorEmail').html('');
             });
 
             $('body').on('click', '#btnEdit', function() {
                 let id = $(this).data('id');
                 $.ajax({
                     type: "GET",
-                    url: "barang/" + id + "/edit",
+                    url: "supplier/" + id + "/edit",
                     dataType: "json",
                     success: function(response) {
-                        $('#modalLabel').html("Edit Barang");
-                        $('#save').val("edit-barang");
+                        $('#modalLabel').html("Edit Supplier");
+                        $('#save').val("edit-supplier");
                         $('#modal').modal('show');
 
-                        $('#name').removeClass('is-invalid');
-                        $('.errorName').html('');
+                        $('#first_name').removeClass('is-invalid');
+                        $('.errorFirstName').html('');
 
-                        $('#category').removeClass('is-invalid');
-                        $('.errorCategory').html('');
+                        $('#telephone').removeClass('is-invalid');
+                        $('.errorTelephone').html('');
+
+                        $('#email').removeClass('is-invalid');
+                        $('.errorEmail').html('');
 
                         $('#id').val(response.id);
-                        $('#name').val(response.name);
-                        $('#category').val(response.category_id);
+                        $('#first_name').val(response.first_name);
+                        $('#telephone').val(response.telephone);
+                        $('#email').val(response.email);
                     }
                 });
             })
@@ -174,7 +194,7 @@
                 e.preventDefault();
                 $.ajax({
                     data: $(this).serialize(),
-                    url: "{{ route('item.store') }}",
+                    url: "{{ route('supplier.store') }}",
                     type: "POST",
                     dataType: 'json',
                     beforeSend: function() {
@@ -187,22 +207,31 @@
                     },
                     success: function(response) {
                         if (response.errors) {
-                            if (response.errors.name) {
-                                $('#name').addClass('is-invalid');
-                                $('.errorName').html(response.errors.name.join(
+                            if (response.errors.first_name) {
+                                $('#first_name').addClass('is-invalid');
+                                $('.errorFirstName').html(response.errors.first_name.join(
                                     '<br>'));
                             } else {
-                                $('#name').removeClass('is-invalid');
-                                $('.errorName').html('');
+                                $('#first_name').removeClass('is-invalid');
+                                $('.errorFirstName').html('');
                             }
 
-                            if (response.errors.category) {
-                                $('#category').addClass('is-invalid');
-                                $('.errorCategory').html(response.errors.category.join(
+                            if (response.errors.telephone) {
+                                $('#telephone').addClass('is-invalid');
+                                $('.errorTelephone').html(response.errors.telephone.join(
                                     '<br>'));
                             } else {
-                                $('#category').removeClass('is-invalid');
-                                $('.errorCategory').html('');
+                                $('#telephone').removeClass('is-invalid');
+                                $('.errorTelephone').html('');
+                            }
+
+                            if (response.errors.email) {
+                                $('#email').addClass('is-invalid');
+                                $('.errorEmail').html(response.errors.email.join(
+                                    '<br>'));
+                            } else {
+                                $('#email').removeClass('is-invalid');
+                                $('.errorEmail').html('');
                             }
                         } else {
                             $('#modal').modal('hide');
@@ -254,7 +283,7 @@
                     if (result.value) {
                         $.ajax({
                             type: "DELETE",
-                            url: "{{ url('barang/" + id + "') }}",
+                            url: "{{ url('supplier/" + id + "') }}",
                             data: {
                                 id: id
                             },
@@ -294,6 +323,49 @@
                     }
                 })
             })
+
+            $('body').on('change', '.status-toggle', function() {
+                let id = $(this).data('id');
+                let status = $(this).prop('checked') ? '0' : '1';
+
+                $.ajax({
+                    url: "{{ route('supplier.updateStatus') }}",
+                    method: 'POST',
+                    data: {
+                        id: id,
+                        status: status
+                    },
+                    success: function(response) {
+                        toastr.success(response.message, 'Sukses', {
+                            closeButton: true,
+                            progressBar: true,
+                            timeOut: 2000
+                        });
+                        $('#datatable').DataTable().ajax.reload()
+                    },
+                    error: function(xhr) {
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            $.each(xhr.responseJSON.errors, function(key,
+                                value) {
+                                toastr.error(value.join('<br>'),
+                                    'Kesalahan Validasi', {
+                                        closeButton: true,
+                                        progressBar: true,
+                                        timeOut: 2000
+                                    });
+                            });
+                        } else {
+                            toastr.error(
+                                'Terjadi kesalahan, silakan coba lagi.',
+                                'Kesalahan', {
+                                    closeButton: true,
+                                    progressBar: true,
+                                    timeOut: 2000
+                                });
+                        }
+                    }
+                });
+            });
         });
     </script>
 @endsection

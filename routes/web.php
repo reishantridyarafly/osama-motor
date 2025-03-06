@@ -32,11 +32,28 @@ Route::middleware('auth')->group(function () {
     Route::post('/barang-masuk', [App\Http\Controllers\Backend\StockInController::class, 'store'])->name('stockIn.store');
     Route::delete('/barang-masuk/{id}', [App\Http\Controllers\Backend\StockInController::class, 'destroy'])->name('stockIn.destroy');
 
+    Route::get('/barang-keluar', [App\Http\Controllers\Backend\StockOutControler::class, 'index'])->name('stockOut.index');
+    Route::get('/barang-keluar/tambah', [App\Http\Controllers\Backend\StockOutControler::class, 'create'])->name('stockOut.create');
+    Route::get('/barang-keluar/{id}/edit', [App\Http\Controllers\Backend\StockOutControler::class, 'edit'])->name('stockOut.edit');
+    Route::post('/barang-keluar', [App\Http\Controllers\Backend\StockOutControler::class, 'store'])->name('stockOut.store');
+    Route::delete('/barang-keluar/{id}', [App\Http\Controllers\Backend\StockOutControler::class, 'destroy'])->name('stockOut.destroy');
+
+    Route::get('/supplier', [App\Http\Controllers\Backend\SupplierController::class, 'index'])->name('supplier.index');
+    Route::get('/supplier/tambah', [App\Http\Controllers\Backend\SupplierController::class, 'create'])->name('supplier.create');
+    Route::post('/supplier', [App\Http\Controllers\Backend\SupplierController::class, 'store'])->name('supplier.store');
+    Route::post('/supplier/updateStatus', [App\Http\Controllers\Backend\SupplierController::class, 'updateStatus'])->name('supplier.updateStatus');
+    Route::get('/supplier/{id}/edit', [App\Http\Controllers\Backend\SupplierController::class, 'edit'])->name('supplier.edit');
+    Route::post('/supplier/{id}', [App\Http\Controllers\Backend\SupplierController::class, 'update'])->name('supplier.update');
+    Route::delete('/supplier/{id}', [App\Http\Controllers\Backend\SupplierController::class, 'destroy'])->name('supplier.destroy');
+
     Route::get('/profile', [App\Http\Controllers\Backend\ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profile/edit-avatar', [App\Http\Controllers\Backend\ProfileController::class, 'updateAvatar'])->name('profile.updateAvatar');
     Route::delete('/profile/hapus-avatar', [App\Http\Controllers\Backend\ProfileController::class, 'deleteAvatar'])->name('profile.deleteAvatar');
     Route::post('/profile/ubah/password', [App\Http\Controllers\Backend\ProfileController::class, 'changePassword'])->name('profile.changePassword');
     Route::post('/profile/ubah/biodata', [App\Http\Controllers\Backend\ProfileController::class, 'changeBiodata'])->name('profile.changeBiodata');
+
+    Route::get('/laporan', [App\Http\Controllers\Backend\ReportController::class, 'index'])->name('report.index');
+    Route::post('/laporan/print', [App\Http\Controllers\Backend\ReportController::class, 'print'])->name('report.print');
 });
 
 require __DIR__ . '/auth.php';
