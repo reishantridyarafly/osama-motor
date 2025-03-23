@@ -142,8 +142,11 @@
                 $('#modalLabel').html("Tambah Barang");
                 $('#modal').modal('show');
 
-                $('.form-control').removeClass('is-invalid');
-                $('.text-danger').html('');
+                $('#name').removeClass('is-invalid');
+                $('.errorName').html('');
+
+                $('#category').removeClass('is-invalid');
+                $('.errorCategory').html('');
             });
 
             $('body').on('click', '#btnEdit', function() {

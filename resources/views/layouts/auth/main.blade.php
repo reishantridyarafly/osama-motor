@@ -9,7 +9,7 @@
     <meta content="{{ csrf_token() }}" name="csrf-token">
 
     <!-- Favicon icon-->
-    <link rel="shortcut icon" type="image/png" href="{{ asset('assets') }}/images/logos/favicon.png" />
+    <link rel="shortcut icon" type="image/png" href="{{ asset('assets') }}/images/logos/logo.png" />
 
     <!-- Core Css -->
     <link rel="stylesheet" href="{{ asset('assets') }}/css/styles.css" />
@@ -23,14 +23,14 @@
 <body>
     <!-- Preloader -->
     <div class="preloader">
-        <img src="{{ asset('assets') }}/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+        <img src="{{ asset('assets') }}/images/logos/logo.png" alt="loader" class="lds-ripple img-fluid" />
     </div>
     <div id="main-wrapper" class="auth-customizer-none">
         <div
             class="position-relative overflow-hidden radial-gradient min-vh-100 w-100 d-flex align-items-center justify-content-center">
             <div class="d-flex align-items-center justify-content-center w-100">
                 <div class="row justify-content-center w-100">
-                  @yield('content')
+                    @yield('content')
                 </div>
             </div>
         </div>
@@ -45,7 +45,7 @@
 
     <!-- solar icons -->
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-    
+
     <script src="{{ asset('assets') }}/js/plugins/toastr-init.js"></script>
 
     @yield('scripts')

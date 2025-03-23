@@ -9,7 +9,7 @@
     <meta content="{{ csrf_token() }}" name="csrf-token">
 
     <!-- Favicon icon-->
-    <link rel="shortcut icon" type="image/png" href="{{ asset('assets') }}/images/logos/favicon.png" />
+    <link rel="shortcut icon" type="image/png" href="{{ asset('assets') }}/images/logos/logo.png" />
 
     <!-- Core Css -->
     <link rel="stylesheet" href="{{ asset('assets') }}/css/styles.css" />
@@ -26,7 +26,7 @@
 <body>
     <!-- Preloader -->
     <div class="preloader">
-        <img src="{{ asset('assets') }}/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+        <img src="{{ asset('assets') }}/images/logos/logo.png" alt="loader" class="lds-ripple img-fluid" />
     </div>
     <div id="main-wrapper">
         <!-- Sidebar Start -->

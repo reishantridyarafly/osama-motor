@@ -24,7 +24,7 @@
                         <!-- ------------------------------- -->
                         <!-- start notification Dropdown -->
                         <!-- ------------------------------- -->
-                        <li class="nav-item nav-icon-hover-bg rounded-circle dropdown">
+                        {{-- <li class="nav-item nav-icon-hover-bg rounded-circle dropdown">
                             <a class="nav-link position-relative" href="javascript:void(0)" id="drop2"
                                 aria-expanded="false">
                                 <i class="ti ti-bell-ringing"></i>
@@ -120,7 +120,7 @@
                                         Notifications</button>
                                 </div>
                             </div>
-                        </li>
+                        </li> --}}
                         <!-- ------------------------------- -->
                         <!-- end notification Dropdown -->
                         <!-- ------------------------------- -->
@@ -152,14 +152,12 @@
                                             <h5 class="mb-1 fs-3">
                                                 {{ auth()->user()->first_name . ' ' . auth()->user()->last_name }}</h5>
                                             <span class="mb-1 d-block">
-                                                @if (auth()->user()->role == 'leader')
-                                                    Pimpinan
-                                                @elseif (auth()->user()->role == 'cashier')
-                                                    Kasir
-                                                @elseif (auth()->user()->role == 'customer')
-                                                    Pelanggan
-                                                @elseif (auth()->user()->role == 'chef')
-                                                    Koki
+                                                @if (auth()->user()->role == 'owner')
+                                                    Pemilik
+                                                @elseif (auth()->user()->role == 'warehouse')
+                                                    Gudang
+                                                @elseif (auth()->user()->role == 'supplier')
+                                                    Supplier
                                                 @endif
                                             </span>
                                             <p class="mb-0 d-flex align-items-center gap-2">

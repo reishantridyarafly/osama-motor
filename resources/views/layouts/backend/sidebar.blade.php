@@ -3,9 +3,10 @@
         <!-- Start Vertical Layout Sidebar -->
         <!-- ---------------------------------- -->
         <div class="brand-logo d-flex align-items-center justify-content-between">
-            <a href="../main/index.html" class="text-nowrap logo-img">
-                <img src="{{ asset('assets') }}/images/logos/dark-logo.svg" class="dark-logo" alt="Logo-Dark" />
-                <img src="{{ asset('assets') }}/images/logos/light-logo.svg" class="light-logo" alt="Logo-light" />
+            <a href="{{ route('dashboard.index') }}" class="text-nowrap logo-img d-flex align-items-center">
+                <img src="{{ asset('assets') }}/images/logos/logo.png" style="width: 30px" class="dark-logo"
+                    alt="Logo-Dark" />
+                <span class="ms-2 fw-bolder text-uppercase user-select-none">OSAMA MOTOR</span>
             </a>
             <a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
                 <i class="ti ti-x"></i>
@@ -108,29 +109,31 @@
             </ul>
         </nav>
 
-        <div class="fixed-profile p-3 mx-4 mb-2 bg-secondary-subtle rounded mt-3">
-            <div class="hstack gap-3">
-                <div class="john-img">
-                    <img src="{{ asset('storage/users-avatar/' . auth()->user()->avatar) }}" class="rounded-circle"
-                        width="40" height="40" alt="modernize-img" />
+        @if (auth()->user()->role != 'supplier')
+            <div class="fixed-profile p-3 mx-4 mb-2 bg-secondary-subtle rounded mt-3">
+                <div class="hstack gap-3">
+                    <div class="john-img">
+                        <img src="{{ asset('storage/users-avatar/' . auth()->user()->avatar) }}" class="rounded-circle"
+                            width="40" height="40" alt="modernize-img" />
+                    </div>
+                    <div class="john-title">
+                        <h6 class="mb-0 fs-4 fw-semibold">{{ auth()->user()->first_name }}</h6>
+                        <span class="fs-2">
+                            @if (auth()->user()->role == 'owner')
+                                Pemilik
+                            @elseif (auth()->user()->role == 'warehouse')
+                                Gudang
+                            @elseif (auth()->user()->role == 'supplier')
+                                Supplier
+                            @endif
+                        </span>
+                    </div>
+                    <button class="border-0 bg-transparent text-primary ms-auto logout-link" type="button">
+                        <i class="ti ti-power fs-6"></i>
+                    </button>
                 </div>
-                <div class="john-title">
-                    <h6 class="mb-0 fs-4 fw-semibold">{{ auth()->user()->first_name }}</h6>
-                    <span class="fs-2">
-                        @if (auth()->user()->role == 'owner')
-                            Pemilik
-                        @elseif (auth()->user()->role == 'warehouse')
-                            Gudang
-                        @elseif (auth()->user()->role == 'supplier')
-                            Supplier
-                        @endif
-                    </span>
-                </div>
-                <button class="border-0 bg-transparent text-primary ms-auto logout-link" type="button">
-                    <i class="ti ti-power fs-6"></i>
-                </button>
             </div>
-        </div>
+        @endif
 
         <!-- ---------------------------------- -->
         <!-- Start Vertical Layout Sidebar -->
