@@ -50,6 +50,7 @@
                                         <th>Harga Satuan</th>
                                         <th>Supplier</th>
                                         <th>Tanggal</th>
+                                        <th>Status</th>
                                         @if (auth()->user()->role == 'warehouse')
                                             <th width="10%">Aksi</th>
                                         @endif
@@ -88,11 +89,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="item" class="form-label">Barang <span class="text-danger">*</span></label>
-                            <select class="form-control" id="item" name="item">
+                            <select class="form-control" id="item" name="item" disabled>
                                 <option value="">-- Pilih Barang --</option>
-                                @foreach ($items as $item)
-                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
-                                @endforeach
                             </select>
                             <small class="text-danger errorItem"></small>
                         </div>
@@ -128,6 +126,7 @@
             digitGroupSeparator: '.',
             decimalPlaces: 0,
         });
+
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
@@ -165,6 +164,10 @@
                         data: 'date',
                         name: 'date'
                     },
+                    {
+                        data: 'status',
+                        name: 'status'
+                    },
                     @if (auth()->user()->role == 'warehouse')
                         {
                             data: 'action',
@@ -193,6 +196,17 @@
 
                 $('#unit_cost').removeClass('is-invalid');
                 $('.errorUnitCost').html('');
+
+                if (AutoNumeric.getAutoNumericElement('#unit_cost')) {
+                    AutoNumeric.getAutoNumericElement('#unit_cost').remove();
+                }
+
+                new AutoNumeric('#unit_cost', {
+                    currencySymbol: 'Rp ',
+                    decimalCharacter: ',',
+                    digitGroupSeparator: '.',
+                    decimalPlaces: 0,
+                });
             });
 
             $('body').on('click', '#btnEdit', function() {
@@ -220,8 +234,36 @@
 
                         $('#id').val(response.id);
                         $('#supplier').val(response.supplier_id);
-                        $('#item').val(response.item_id);
+
+                        $('#item').prop('disabled', false);
+                        $.ajax({
+                            url: "{{ route('items.by.supplier') }}",
+                            type: 'GET',
+                            data: {
+                                supplier_id: response.supplier_id
+                            },
+                            success: function(items) {
+                                let options =
+                                    '<option value="">-- Pilih Barang --</option>';
+                                items.forEach(function(item) {
+                                    options +=
+                                        `<option value="${item.id}" ${item.id == response.item_id ? 'selected' : ''}>${item.name}</option>`;
+                                });
+                                $('#item').html(options);
+                                $('#item').val(response.item_id);
+                            },
+                            error: function(xhr) {
+                                toastr.error('Gagal mengambil data barang',
+                                    'Kesalahan', {
+                                        closeButton: true,
+                                        progressBar: true,
+                                        timeOut: 2000
+                                    });
+                            }
+                        });
+
                         $('#quantity').val(response.quantity);
+
 
                         if (AutoNumeric.getAutoNumericElement('#unit_cost')) {
                             AutoNumeric.getAutoNumericElement('#unit_cost').remove();
@@ -236,6 +278,46 @@
                     }
                 });
             })
+
+            $('#supplier').on('change', function() {
+                const supplierId = $(this).val();
+                const itemSelect = $('#item');
+
+                if (!supplierId) {
+                    itemSelect.html('<option value="">-- Pilih Barang --</option>').prop('disabled', true);
+                    return;
+                }
+
+                itemSelect.prop('disabled', false);
+
+                $.ajax({
+                    url: "{{ route('items.by.supplier') }}",
+                    type: 'GET',
+                    data: {
+                        supplier_id: supplierId
+                    },
+                    success: function(response) {
+                        let options = '<option value="">-- Pilih Barang --</option>';
+                        response.forEach(function(item) {
+                            options +=
+                                `<option value="${item.id}">${item.name}</option>`;
+                        });
+                        itemSelect.html(options);
+                    },
+                    error: function(xhr) {
+                        toastr.error('Gagal mengambil data barang', 'Kesalahan', {
+                            closeButton: true,
+                            progressBar: true,
+                            timeOut: 2000
+                        });
+                        itemSelect.html('<option value="">-- Pilih Barang --</option>');
+                    }
+                });
+            });
+
+            $('#modal').on('hidden.bs.modal', function() {
+                $('#item').html('<option value="">-- Pilih Barang --</option>').prop('disabled', true);
+            });
 
             $('#form').submit(function(e) {
                 e.preventDefault();

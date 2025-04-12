@@ -138,7 +138,7 @@
 
             $('#btnAdd').click(function() {
                 $('#id').val('');
-                $('#modalLabel').html("Tambah Barang Masuk");
+                $('#modalLabel').html("Tambah Barang Keluar");
                 $('#modal').modal('show');
                 $('#form').trigger("reset");
 

@@ -46,6 +46,7 @@
                                         <th>Nama</th>
                                         <th>Stok</th>
                                         <th>Kategori</th>
+                                        <th>Supplier</th>
                                         <th width="10%">Aksi</th>
                                     </tr>
                                 </thead>
@@ -84,6 +85,16 @@
                                 @endforeach
                             </select>
                             <small class="text-danger errorCategory"></small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="supplier" class="form-label">Supplier <span class="text-danger">*</span></label>
+                            <select name="supplier" id="supplier" class="form-control">
+                                <option value="">-- Pilih Supplier --</option>
+                                @foreach ($suppliers as $supplier)
+                                    <option value="{{ $supplier->id }}">{{ $supplier->first_name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-danger errorSupplier"></small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -128,6 +139,10 @@
                         name: 'category'
                     },
                     {
+                        data: 'supplier',
+                        name: 'supplier'
+                    },
+                    {
                         data: 'action',
                         name: 'action',
                         orderable: false,
@@ -147,6 +162,9 @@
 
                 $('#category').removeClass('is-invalid');
                 $('.errorCategory').html('');
+
+                $('#supplier').removeClass('is-invalid');
+                $('.errorSupplier').html('');
             });
 
             $('body').on('click', '#btnEdit', function() {
@@ -166,9 +184,13 @@
                         $('#category').removeClass('is-invalid');
                         $('.errorCategory').html('');
 
+                        $('#supplier').removeClass('is-invalid');
+                        $('.errorSupplier').html('');
+
                         $('#id').val(response.id);
                         $('#name').val(response.name);
                         $('#category').val(response.category_id);
+                        $('#supplier').val(response.supplier_id);
                     }
                 });
             })
@@ -206,6 +228,15 @@
                             } else {
                                 $('#category').removeClass('is-invalid');
                                 $('.errorCategory').html('');
+                            }
+
+                            if (response.errors.supplier) {
+                                $('#supplier').addClass('is-invalid');
+                                $('.errorSupplier').html(response.errors.supplier.join(
+                                    '<br>'));
+                            } else {
+                                $('#supplier').removeClass('is-invalid');
+                                $('.errorSupplier').html('');
                             }
                         } else {
                             $('#modal').modal('hide');

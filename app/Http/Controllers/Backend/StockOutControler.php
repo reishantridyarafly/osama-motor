@@ -29,7 +29,9 @@ class StockOutControler extends Controller
         })
         ->make(true);
     }
-    $items = Item::orderBy('name', 'asc')->get();
+    $items = Item::whereHas('stockIns', function ($query) {
+      $query->where('status', 'accepted');
+    })->orderBy('name', 'asc')->get();
     return view('backend.stockOut.index', compact(['items']));
   }
 

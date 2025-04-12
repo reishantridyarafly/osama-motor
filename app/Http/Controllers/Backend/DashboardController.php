@@ -18,7 +18,9 @@ class DashboardController extends Controller
 
         foreach ($items as $item) {
             // Mengambil data stock in dan stock out untuk item tertentu
-            $stockIns = StockIn::where('item_id', $item->id)->get();
+            $stockIns = StockIn::where('item_id', $item->id)
+                ->where('status', 'accepted')
+                ->get();
             $stockOuts = StockOut::where('item_id', $item->id)->get();
 
             // Menghitung permintaan harian rata-rata (D)
@@ -52,6 +54,7 @@ class DashboardController extends Controller
             // Menghitung reorder point (ROP)
             $reorderPoint = $averageDailyDemand * $averageLeadTime + $safetyStock;
             $currentStock = StockIn::where('item_id', $item->id)
+                ->where('status', 'accepted')
                 ->where('quantity', '>', 0)
                 ->sum('quantity');
 

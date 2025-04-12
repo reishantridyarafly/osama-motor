@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create']);
+Route::middleware('guest')->group(function () {
+    Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create']);
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Backend\DashboardController::class, 'index'])->name('dashboard.index');
@@ -42,6 +44,16 @@ Route::middleware(['auth', 'role:warehouse'])->group(function () {
     Route::get('/barang/{id}/edit', [App\Http\Controllers\Backend\ItemController::class, 'edit'])->name('item.edit');
     Route::post('/barang', [App\Http\Controllers\Backend\ItemController::class, 'store'])->name('item.store');
     Route::delete('/barang/{id}', [App\Http\Controllers\Backend\ItemController::class, 'destroy'])->name('item.destroy');
+    Route::get('/items-by-supplier', [App\Http\Controllers\Backend\ItemController::class, 'getItemsBySupplier'])->name('items.by.supplier');
+});
+
+Route::middleware(['auth', 'role:supplier'])->group(function () {
+    Route::get('/permintaan-barang', [App\Http\Controllers\Backend\ItemRequestController::class, 'index'])->name('item_request.index');
+    Route::get('/permintaan-barang/riwayat', [App\Http\Controllers\Backend\ItemRequestController::class, 'history'])->name('item_request.history');
+    Route::post('/permintaan-barang/updateStatus', [App\Http\Controllers\Backend\ItemRequestController::class, 'updateStatus'])->name('item_request.updateStatus');
+
+    Route::get('/laporan', [App\Http\Controllers\Backend\ReportController::class, 'index'])->name('report.index');
+    Route::post('/laporan/print', [App\Http\Controllers\Backend\ReportController::class, 'print'])->name('report.print');
 });
 
 Route::middleware(['auth', 'role:owner'])->group(function () {

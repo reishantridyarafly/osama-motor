@@ -15,7 +15,7 @@ class StockInController extends Controller
   public function index(Request $request)
   {
     if ($request->ajax()) {
-      $stockIn = StockIn::with('item')->orderBy('created_at', 'asc')->get();
+      $stockIn = StockIn::with('item', 'supplier')->orderBy('created_at', 'asc')->get();
       return DataTables::of($stockIn)
         ->addIndexColumn()
         ->addColumn('item', function ($data) {
@@ -30,8 +30,20 @@ class StockInController extends Controller
         ->addColumn('date', function ($data) {
           return \Carbon\Carbon::parse($data->date)->translatedFormat('l, d F Y');
         })
+        ->addColumn('status', function ($data) {
+          $badge = match ($data->status) {
+            'request' => '<span class="badge rounded-pill text-bg-warning">Permintaan</span>',
+            'accepted' => '<span class="badge rounded-pill text-bg-success">Diterima</span>',
+            'rejected' => '<span class="badge rounded-pill text-bg-danger">Ditolak</span>',
+            default => '<span class="badge rounded-pill text-bg-secondary">Unknown</span>'
+          };
+          return $badge;
+        })
         ->addColumn('action', function ($data) {
           if (auth()->user()->role !== 'warehouse') {
+            return '';
+          }
+          if ($data->status !== 'request') {
             return '';
           }
 
@@ -54,15 +66,15 @@ class StockInController extends Controller
                       </ul>
                     </div>';
         })
-        ->rawColumns(['action'])
+        ->rawColumns(['status', 'action'])
         ->make(true);
     }
-    $items = Item::orderBy('name', 'asc')->get();
+
     $suppliers = User::where('id', '!=', auth()->user()->id)
       ->where('role', 'supplier')
       ->orderBy('first_name', 'asc')
       ->get();
-    return view('backend.stockIn.index', compact(['items', 'suppliers']));
+    return view('backend.stockIn.index', compact(['suppliers']));
   }
 
   public function store(Request $request)

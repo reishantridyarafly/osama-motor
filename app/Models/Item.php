@@ -45,4 +45,9 @@ class Item extends Model
     {
         return $this->hasMany(StockOut::class);
     }
+
+    public function supplier()
+    {
+        return $this->belongsTo(User::class, 'supplier_id');
+    }
 }

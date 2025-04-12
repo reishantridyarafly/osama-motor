@@ -179,6 +179,108 @@
                     </div>
                 </div>
             @endif
+
+            @if (auth()->user()->role == 'supplier')
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Permintaan Barang</h3>
+                            </div>
+                            <div class="card-body">
+                                @php
+                                    $itemRequests = \App\Models\StockIn::with('item')
+                                        ->where('status', 'request')
+                                        ->where('supplier_id', auth()->id())
+                                        ->orderBy('created_at', 'desc')
+                                        ->get();
+                                @endphp
+
+                                @if ($itemRequests->count() > 0)
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Nama Barang</th>
+                                                    <th>Jumlah</th>
+                                                    <th>Harga Satuan</th>
+                                                    <th>Total</th>
+                                                    <th>Tanggal Permintaan</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($itemRequests as $key => $request)
+                                                    <tr>
+                                                        <td>{{ $key + 1 }}</td>
+                                                        <td>{{ $request->item->name ?? 'N/A' }}</td>
+                                                        <td>{{ $request->quantity }}</td>
+                                                        <td>Rp {{ number_format($request->unit_cost, 0, ',', '.') }}</td>
+                                                        <td>Rp
+                                                            {{ number_format($request->quantity * $request->unit_cost, 0, ',', '.') }}
+                                                        </td>
+                                                        <td>{{ \Carbon\Carbon::parse($request->created_at)->translatedFormat('d F Y') }}
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge rounded-pill text-bg-danger">Menunggu
+                                                                Persetujuan</span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i> Tidak ada permintaan barang saat ini.
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-shopping-cart fa-3x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-1 text-white">Total Permintaan</h5>
+                                        <h3 class="card-text mb-0 text-white">
+                                            {{ $itemRequests->count() }} Item
+                                        </h3>
+                                        <small>Menunggu persetujuan Anda</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-money-bill-wave fa-3x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-1 text-white">Total Nilai</h5>
+                                        <h3 class="card-text mb-0 text-white">
+                                            Rp
+                                            {{ number_format($itemRequests->sum(function ($item) {return $item->quantity * $item->unit_cost;}),0,',','.') }}
+                                        </h3>
+                                        <small>Nilai permintaan barang</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 @endsection

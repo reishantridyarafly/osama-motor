@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name', 100);
             $table->uuid('category_id');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->uuid('supplier_id');
+            $table->foreign('supplier_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

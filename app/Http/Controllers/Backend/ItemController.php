@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\StockIn;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\DataTables;
@@ -21,8 +22,13 @@ class ItemController extends Controller
                 ->addColumn('category', function ($data) {
                     return $data->category->name ?? null;
                 })
+                ->addColumn('supplier', function ($data) {
+                    return $data->supplier->first_name ?? null;
+                })
                 ->addColumn('total_stock', function ($data) {
-                    $stock = StockIn::where('item_id', $data->id)->sum('quantity');
+                    $stock = StockIn::where('item_id', $data->id)
+                        ->where('status', 'accepted')
+                        ->sum('quantity');
                     return $stock;
                 })
                 ->addColumn('action', function ($data) {
@@ -50,7 +56,8 @@ class ItemController extends Controller
         }
 
         $categories = Category::orderBy('name', 'asc')->get();
-        return view('backend.item.index', compact('categories'));
+        $suppliers = User::where('role', 'supplier')->orderBy('first_name', 'asc')->get();
+        return view('backend.item.index', compact(['categories', 'suppliers']));
     }
 
     public function store(Request $request)
@@ -61,11 +68,13 @@ class ItemController extends Controller
             [
                 'name' => 'required|unique:items,name,' . $id,
                 'category' => 'required',
+                'supplier' => 'required',
             ],
             [
                 'name.required' => 'Silakan isi barang terlebih dahulu.',
                 'name.unique' => 'Nama barang sudah tersedia.',
                 'category.required' => 'Silakan pilih kategori terlebih dahulu.',
+                'supplier.required' => 'Silakan pilih supplier terlebih dahulu.',
             ]
         );
 
@@ -78,6 +87,7 @@ class ItemController extends Controller
                 ], [
                     'name' => $request->name,
                     'category_id' => $request->category,
+                    'supplier_id' => $request->supplier,
                 ]);
 
                 return response()->json([
@@ -133,5 +143,11 @@ class ItemController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function getItemsBySupplier(Request $request)
+    {
+        $items = Item::where('supplier_id', $request->supplier_id)->get();
+        return response()->json($items);
     }
 }

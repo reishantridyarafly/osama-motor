@@ -97,6 +97,27 @@
                     </li>
                 @endif
 
+                @if (auth()->user()->role == 'supplier')
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['item_request.index']) ? 'active' : '' }}"
+                            href="{{ route('item_request.index') }}">
+                            <span>
+                                <i class="ti ti-clipboard-list"></i>
+                            </span>
+                            <span class="hide-menu">Permintaan Barang</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['item_request.history']) ? 'active' : '' }}"
+                            href="{{ route('item_request.history') }}">
+                            <span>
+                                <i class="ti ti-history"></i>
+                            </span>
+                            <span class="hide-menu">Riwayat Permintaan</span>
+                        </a>
+                    </li>
+                @endif
+
                 <li class="sidebar-item">
                     <a class="sidebar-link {{ request()->routeIs(['profile.*']) ? 'active' : '' }}"
                         href="{{ route('profile.index') }}">

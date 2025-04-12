@@ -74,8 +74,13 @@ class User extends Authenticatable
         ];
     }
 
-    public function stockIns()
+    public function Items()
     {
-        return $this->hasMany(StockIn::class, 'supplier_id');
+        return $this->hasMany(Item::class, 'supplier_id');
+    }
+
+    public function suppliers()
+    {
+        return $this->hasMany(User::class, 'supplier_id');
     }
 }
