@@ -51,6 +51,7 @@ Sebelum memulai, pastikan sistem Anda memenuhi persyaratan berikut:
     DB_USERNAME=root
     DB_PASSWORD=
     ```
+
 ### 3. Install Dependencies
 
 1. Install dependencies PHP:
@@ -62,7 +63,10 @@ Sebelum memulai, pastikan sistem Anda memenuhi persyaratan berikut:
     npm install
     npm run build
     ```
-    
+3. Buat symbolic link untuk storage:
+    ```bash
+    php artisan storage:link
+    ```
 
 ### 4. Setup Database dan Migrasi
 
