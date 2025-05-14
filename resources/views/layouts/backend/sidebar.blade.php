@@ -34,7 +34,7 @@
                         <span class="hide-menu">Dashboard</span>
                     </a>
                 </li>
-                @if (auth()->user()->role == 'warehouse')
+                @if (auth()->user()->role == 'supplier')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['category.*']) ? 'active' : '' }}"
                             href="{{ route('category.index') }}">
@@ -55,7 +55,7 @@
                     </li>
                 @endif
 
-                @if (auth()->user()->role != 'supplier')
+                @if (auth()->user()->role == 'warehouse')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['stockIn.*']) ? 'active' : '' }}"
                             href="{{ route('stockIn.index') }}">
@@ -65,6 +65,8 @@
                             <span class="hide-menu">Barang Masuk</span>
                         </a>
                     </li>
+                @endif
+                @if (auth()->user()->role == 'cashier')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['stockOut.*']) ? 'active' : '' }}"
                             href="{{ route('stockOut.index') }}">
@@ -76,7 +78,7 @@
                     </li>
                 @endif
 
-                @if (auth()->user()->role == 'owner')
+                @if (auth()->user()->role == 'owner' || auth()->user()->role == 'warehouse')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['supplier.*']) ? 'active' : '' }}"
                             href="{{ route('supplier.index') }}">
@@ -86,6 +88,9 @@
                             <span class="hide-menu">Supplier</span>
                         </a>
                     </li>
+                @endif
+
+                @if (auth()->user()->role == 'owner')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['report.*']) ? 'active' : '' }}"
                             href="{{ route('report.index') }}">

@@ -37,9 +37,9 @@
                                         <th width="3%">#</th>
                                         <th>Nama Barang</th>
                                         <th>Qty</th>
-                                        <th>Harga Satuan</th>
-                                        <th>Supplier</th>
+                                        <th>Harga</th>
                                         <th>Tanggal</th>
+                                        <th>Status</th>
                                         <th width="10%">Aksi</th>
                                     </tr>
                                 </thead>
@@ -82,16 +82,16 @@
                         name: 'quantity'
                     },
                     {
-                        data: 'unit_cost',
-                        name: 'unit_cost'
-                    },
-                    {
-                        data: 'supplier',
-                        name: 'supplier'
+                        data: 'price',
+                        name: 'price'
                     },
                     {
                         data: 'date',
                         name: 'date'
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
                     },
                     {
                         data: 'action',

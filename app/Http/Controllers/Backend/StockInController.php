@@ -24,8 +24,8 @@ class StockInController extends Controller
         ->addColumn('supplier', function ($data) {
           return $data->supplier->first_name ?? null;
         })
-        ->addColumn('unit_cost', function ($data) {
-          return 'Rp ' . number_format($data->unit_cost, 0, ',', '.');
+        ->addColumn('price', function ($data) {
+          return 'Rp ' . number_format($data->item->price, 0, ',', '.');
         })
         ->addColumn('date', function ($data) {
           return \Carbon\Carbon::parse($data->date)->translatedFormat('l, d F Y');
@@ -46,7 +46,6 @@ class StockInController extends Controller
           if ($data->status !== 'request') {
             return '';
           }
-
           return '
                   <div class="dropdown dropstart">
                       <a href="javascript:void(0)" class="text-muted" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -84,7 +83,6 @@ class StockInController extends Controller
       'supplier' => 'required|exists:users,id',
       'item' => 'required|exists:items,id',
       'quantity' => 'required|integer|min:1',
-      'unit_cost' => 'required',
     ], [
       'supplier.required' => 'Silakan pilih supplier terlebih dahulu.',
       'supplier.exists' => 'Supplier yang dipilih tidak valid.',
@@ -93,7 +91,6 @@ class StockInController extends Controller
       'quantity.required' => 'Silakan isi quantity terlebih dahulu.',
       'quantity.integer' => 'Quantity harus berupa angka bulat.',
       'quantity.min' => 'Quantity minimal 1.',
-      'unit_cost.required' => 'Silakan isi harga satuan terlebih dahulu.',
     ]);
 
     if ($validated->fails()) {
@@ -104,7 +101,6 @@ class StockInController extends Controller
           $stockIn = StockIn::find($id);
           $stockIn->update([
             'quantity' => $request->quantity,
-            'unit_cost' => str_replace(['Rp', ' ', '.'], '', $request->unit_cost),
             'item_id' => $request->item,
             'supplier_id' => $request->supplier,
           ]);
@@ -112,7 +108,6 @@ class StockInController extends Controller
           StockIn::create([
             'quantity' => $request->quantity,
             'date' => now(),
-            'unit_cost' => str_replace(['Rp', ' ', '.'], '', $request->unit_cost),
             'item_id' => $request->item,
             'supplier_id' => $request->supplier,
           ]);

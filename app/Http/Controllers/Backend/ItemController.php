@@ -16,21 +16,16 @@ class ItemController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $items = Item::orderBy('name', 'asc')->get();
+            $items = Item::where('supplier_id', auth()->user()->id)->orderBy('name', 'asc')->get();
             return DataTables::of($items)
                 ->addIndexColumn()
                 ->addColumn('category', function ($data) {
                     return $data->category->name ?? null;
                 })
-                ->addColumn('supplier', function ($data) {
-                    return $data->supplier->first_name ?? null;
+                ->addColumn('price', function ($data) {
+                    return 'Rp ' . number_format($data->price, 0, ',', '.');
                 })
-                ->addColumn('total_stock', function ($data) {
-                    $stock = StockIn::where('item_id', $data->id)
-                        ->where('status', 'accepted')
-                        ->sum('quantity');
-                    return $stock;
-                })
+
                 ->addColumn('action', function ($data) {
                     return '
                      <div class="dropdown dropstart">
@@ -68,13 +63,19 @@ class ItemController extends Controller
             [
                 'name' => 'required|unique:items,name,' . $id,
                 'category' => 'required',
-                'supplier' => 'required',
+                'stock' => 'required|numeric|min:0',
+                'price' => 'required|numeric|min:0',
             ],
             [
                 'name.required' => 'Silakan isi barang terlebih dahulu.',
                 'name.unique' => 'Nama barang sudah tersedia.',
                 'category.required' => 'Silakan pilih kategori terlebih dahulu.',
-                'supplier.required' => 'Silakan pilih supplier terlebih dahulu.',
+                'stock.required' => 'Silakan isi stok terlebih dahulu.',
+                'stock.numeric' => 'Stok harus berupa angka.',
+                'stock.min' => 'Stok tidak boleh kurang dari 0.',
+                'price.required' => 'Silakan isi harga terlebih dahulu.',
+                'price.numeric' => 'Harga harus berupa angka.',
+                'price.min' => 'Harga tidak boleh kurang dari 0.',
             ]
         );
 
@@ -86,8 +87,10 @@ class ItemController extends Controller
                     'id' => $id
                 ], [
                     'name' => $request->name,
+                    'stock' => $request->stock,
+                    'price' => $request->price,
                     'category_id' => $request->category,
-                    'supplier_id' => $request->supplier,
+                    'supplier_id' => auth()->user()->id,
                 ]);
 
                 return response()->json([
@@ -147,7 +150,9 @@ class ItemController extends Controller
 
     public function getItemsBySupplier(Request $request)
     {
-        $items = Item::where('supplier_id', $request->supplier_id)->get();
+        $items = Item::where('supplier_id', $request->supplier_id)
+            ->where('stock', '>', 0)
+            ->get();
         return response()->json($items);
     }
 }

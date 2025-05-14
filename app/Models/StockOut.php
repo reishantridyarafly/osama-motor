@@ -35,4 +35,9 @@ class StockOut extends Model
     {
         return $this->belongsTo(Item::class);
     }
+
+    public function cashier()
+    {
+        return $this->belongsTo(User::class, 'cashier_id');
+    }
 }

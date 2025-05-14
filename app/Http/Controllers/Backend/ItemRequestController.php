@@ -25,11 +25,20 @@ class ItemRequestController extends Controller
         ->addColumn('supplier', function ($data) {
           return $data->supplier->first_name ?? null;
         })
-        ->addColumn('unit_cost', function ($data) {
-          return 'Rp ' . number_format($data->unit_cost, 0, ',', '.');
+        ->addColumn('price', function ($data) {
+          return 'Rp ' . number_format($data->item->price, 0, ',', '.');
         })
         ->addColumn('date', function ($data) {
           return \Carbon\Carbon::parse($data->date)->translatedFormat('l, d F Y');
+        })
+        ->addColumn('status', function ($data) {
+          if ($data->status == 'request') {
+            return '<span class="badge rounded-pill text-bg-warning">Menunggu Persetujuan</span>';
+          } elseif ($data->status == 'accepted') {
+            return '<span class="badge rounded-pill text-bg-success">Disetujui</span>';
+          } else {
+            return '<span class="badge rounded-pill text-bg-danger">Ditolak</span>';
+          }
         })
         ->addColumn('action', function ($data) {
           return '
@@ -51,7 +60,7 @@ class ItemRequestController extends Controller
                </ul>
              </div>';
         })
-        ->rawColumns(['action'])
+        ->rawColumns(['action', 'status'])
         ->make(true);
     }
 
@@ -66,17 +75,14 @@ class ItemRequestController extends Controller
         ->whereIn('status', ['accepted', 'rejected'])
         ->orderBy('created_at', 'asc')
         ->get();
-        
+
       return DataTables::of($stockIn)
         ->addIndexColumn()
         ->addColumn('item', function ($data) {
           return $data->item->name ?? null;
         })
-        ->addColumn('supplier', function ($data) {
-          return $data->supplier->first_name ?? null;
-        })
-        ->addColumn('unit_cost', function ($data) {
-          return 'Rp ' . number_format($data->unit_cost, 0, ',', '.');
+        ->addColumn('price', function ($data) {
+          return 'Rp ' . number_format($data->item->price, 0, ',', '.');
         })
         ->addColumn('date', function ($data) {
           return \Carbon\Carbon::parse($data->date)->translatedFormat('l, d F Y');
@@ -98,6 +104,10 @@ class ItemRequestController extends Controller
   {
     try {
       $stockIn = StockIn::find($request->id);
+      if ($request->status == 'accepted') {
+        $stockIn->item->stock -= $stockIn->quantity;
+        $stockIn->item->save();
+      }
       $stockIn->status = $request->status;
       $stockIn->save();
 

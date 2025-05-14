@@ -15,9 +15,12 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->integer('quantity')->default(0);
             $table->date('date');
-            $table->decimal('unit_price', 15, 2);
+            $table->integer('price_sale');
+            $table->string('customer_name')->nullable();
             $table->uuid('item_id');
             $table->foreign('item_id')->references('id')->on('items')->onDelete('cascade');
+            $table->uuid('cashier_id');
+            $table->foreign('cashier_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

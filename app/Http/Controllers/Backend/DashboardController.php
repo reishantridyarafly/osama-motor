@@ -7,12 +7,13 @@ use App\Models\Item;
 use App\Models\StockIn;
 use App\Models\StockOut;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $items = Item::all();
+        $items = Item::with('supplier')->get();
 
         $safetyStockData = [];
 
@@ -21,6 +22,10 @@ class DashboardController extends Controller
             $stockIns = StockIn::where('item_id', $item->id)
                 ->where('status', 'accepted')
                 ->get();
+
+            if ($stockIns->isEmpty()) {
+                continue;
+            }
             $stockOuts = StockOut::where('item_id', $item->id)->get();
 
             // Menghitung permintaan harian rata-rata (D)
@@ -58,10 +63,13 @@ class DashboardController extends Controller
                 ->where('quantity', '>', 0)
                 ->sum('quantity');
 
+            $supplierName = $item->supplier ? $item->supplier->first_name : 'N/A';
+
             // Menyimpan hasil perhitungan
             $safetyStockData[] = [
                 'item_id' => $item->id,
                 'item_name' => $item->name,
+                'supplier_name' => $supplierName,
                 'current_stock' => $currentStock,
                 'average_daily_demand' => round($averageDailyDemand, 2),
                 'safety_stock' => ceil($safetyStock),

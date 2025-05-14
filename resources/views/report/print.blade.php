@@ -123,9 +123,9 @@
                 <td>{{ \Carbon\Carbon::parse($stockOut->date)->translatedFormat('l, d F Y') }}</td>
                 <td>{{ $stockOut->item->name }}</td>
                 <td class="quantity-column">{{ $stockOut->quantity }}</td>
-                <td class="price-column">{{ 'Rp ' . number_format($stockOut->unit_price, 0, ',', '.') }}</td>
+                <td class="price-column">{{ 'Rp ' . number_format($stockOut->item->price, 0, ',', '.') }}</td>
                 <td class="price-column">
-                    {{ 'Rp ' . number_format($stockOut->quantity * $stockOut->unit_price, 0, ',', '.') }}</td>
+                    {{ 'Rp ' . number_format($stockOut->quantity * $stockOut->item->price, 0, ',', '.') }}</td>
             </tr>
         @empty
             <tr>
@@ -140,7 +140,7 @@
                 {{ 'Rp ' .
                     number_format(
                         $stockOuts->sum(function ($stockOut) {
-                            return $stockOut->quantity * $stockOut->unit_price;
+                            return $stockOut->quantity * $stockOut->item->price;
                         }),
                         0,
                         ',',

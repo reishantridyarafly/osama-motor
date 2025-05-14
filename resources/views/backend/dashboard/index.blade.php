@@ -40,7 +40,8 @@
                                     <table class="table table-bordered">
                                         <thead class="sticky-top bg-white">
                                             <tr>
-                                                <th>Item</th>
+                                                <th>Barang</th>
+                                                <th>Supplier</th>
                                                 <th>Stok Saat Ini</th>
                                                 <th>Permintaan Harian</th>
                                                 <th>Safety Stock</th>
@@ -64,18 +65,34 @@
                                             @foreach ($sortedData as $item)
                                                 <tr>
                                                     <td>{{ $item['item_name'] }}</td>
-                                                    <td>{{ number_format($item['current_stock']) }}</td>
+                                                    <td>{{ $item['supplier_name'] }}</td>
+                                                    <td>
+                                                        {{ number_format($item['current_stock']) }}
+                                                    </td>
                                                     <td>{{ number_format($item['average_daily_demand'], 2) }}</td>
                                                     <td>{{ number_format($item['safety_stock']) }}</td>
                                                     <td>{{ number_format($item['reorder_point']) }}</td>
                                                     <td>
                                                         @if ($item['stock_status'] === 'danger')
-                                                            <span class="badge rounded-pill text-bg-danger">Stok Dibawah
-                                                                Safety
-                                                                Stock!</span>
+                                                            <a href="{{ route('stockIn.index') }}"
+                                                                class="text-decoration-none"
+                                                                style="transition: all 0.3s ease;"
+                                                                onmouseover="this.style.opacity='0.8'; this.style.transform='scale(1.05)'"
+                                                                onmouseout="this.style.opacity='1'; this.style.transform='scale(1)'">
+                                                                <span class="badge rounded-pill text-bg-danger"
+                                                                    style="display: inline-block;">Stok Dibawah
+                                                                    Safety
+                                                                    Stock!</span>
+                                                            </a>
                                                         @elseif($item['stock_status'] === 'warning')
-                                                            <span class="badge rounded-pill text-bg-warning">Perlu
-                                                                Reorder!</span>
+                                                            <a href="{{ route('stockIn.index') }}"
+                                                                class="text-decoration-none"
+                                                                style="transition: all 0.3s ease;"
+                                                                onmouseover="this.style.opacity='0.8'; this.style.transform='scale(1.05)'"
+                                                                onmouseout="this.style.opacity='1'; this.style.transform='scale(1)'">
+                                                                <span class="badge rounded-pill text-bg-warning">Perlu
+                                                                    Reorder!</span>
+                                                            </a>
                                                         @else
                                                             <span class="badge rounded-pill text-bg-success">Aman</span>
                                                         @endif
@@ -204,10 +221,10 @@
                                                     <th>No</th>
                                                     <th>Nama Barang</th>
                                                     <th>Jumlah</th>
-                                                    <th>Harga Satuan</th>
-                                                    <th>Total</th>
+                                                    <th>Harga</th>
                                                     <th>Tanggal Permintaan</th>
                                                     <th>Status</th>
+                                                    <th>Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -216,15 +233,34 @@
                                                         <td>{{ $key + 1 }}</td>
                                                         <td>{{ $request->item->name ?? 'N/A' }}</td>
                                                         <td>{{ $request->quantity }}</td>
-                                                        <td>Rp {{ number_format($request->unit_cost, 0, ',', '.') }}</td>
-                                                        <td>Rp
-                                                            {{ number_format($request->quantity * $request->unit_cost, 0, ',', '.') }}
-                                                        </td>
-                                                        <td>{{ \Carbon\Carbon::parse($request->created_at)->translatedFormat('d F Y') }}
+                                                        <td>Rp {{ number_format($request->item->price, 0, ',', '.') }}</td>
+                                                        <td>{{ \Carbon\Carbon::parse($request->date)->translatedFormat('d F Y') }}
                                                         </td>
                                                         <td>
-                                                            <span class="badge rounded-pill text-bg-danger">Menunggu
-                                                                Persetujuan</span>
+                                                            @if ($request->status == 'request')
+                                                                <span class="badge rounded-pill text-bg-warning">Menunggu
+                                                                    Persetujuan</span>
+                                                            @elseif ($request->status == 'accepted')
+                                                                <span
+                                                                    class="badge rounded-pill text-bg-success">Disetujui</span>
+                                                            @else
+                                                                <span
+                                                                    class="badge rounded-pill text-bg-danger">Ditolak</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex gap-2">
+                                                                <a href="javascript:void(0)"
+                                                                    class="approve-btn text-success me-1" id="btnAccepted"
+                                                                    data-id="{{ $request->id }}" title="Setuju">
+                                                                    <i class="fas fa-check fa-2x"></i>
+                                                                </a>
+                                                                <a href="javascript:void(0)"
+                                                                    class="reject-btn text-danger" id="btnRejected"
+                                                                    data-id="{{ $request->id }}" title="Tidak Setuju">
+                                                                    <i class="fas fa-times fa-2x"></i>
+                                                                </a>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 @endforeach
@@ -271,7 +307,14 @@
                                         <h5 class="card-title mb-1 text-white">Total Nilai</h5>
                                         <h3 class="card-text mb-0 text-white">
                                             Rp
-                                            {{ number_format($itemRequests->sum(function ($item) {return $item->quantity * $item->unit_cost;}),0,',','.') }}
+                                            {{ number_format(
+                                                $itemRequests->sum(function ($stockIn) {
+                                                    return $stockIn->quantity * ($stockIn->item->price ?? 0);
+                                                }),
+                                                0,
+                                                ',',
+                                                '.',
+                                            ) }}
                                         </h3>
                                         <small>Nilai permintaan barang</small>
                                     </div>
@@ -283,4 +326,130 @@
             @endif
         </div>
     </div>
+@endsection
+
+@section('script')
+    <script>
+        $(document).ready(function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            $('body').on('click', '#btnAccepted', function() {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Terima',
+                    text: "Apakah anda yakin?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, terima!',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.value) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ route('item_request.updateStatus') }}",
+                            data: {
+                                id: id,
+                                status: 'accepted'
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.message) {
+                                    toastr.success(response.message, 'Sukses', {
+                                        closeButton: true,
+                                        progressBar: true,
+                                        timeOut: 2000
+                                    });
+                                    location.reload();
+                                }
+                            },
+                            error: function(xhr) {
+                                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                                    $.each(xhr.responseJSON.errors, function(key,
+                                        value) {
+                                        toastr.error(value.join('<br>'),
+                                            'Kesalahan Validasi', {
+                                                closeButton: true,
+                                                progressBar: true,
+                                                timeOut: 2000
+                                            });
+                                    });
+                                } else {
+                                    toastr.error(
+                                        'Terjadi kesalahan, silakan coba lagi.',
+                                        'Kesalahan', {
+                                            closeButton: true,
+                                            progressBar: true,
+                                            timeOut: 2000
+                                        });
+                                }
+                            }
+                        })
+                    }
+                })
+            })
+
+            $('body').on('click', '#btnRejected', function() {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Tolak',
+                    text: "Apakah anda yakin?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, tolak!',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.value) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ route('item_request.updateStatus') }}",
+                            data: {
+                                id: id,
+                                status: 'rejected'
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.message) {
+                                    toastr.success(response.message, 'Sukses', {
+                                        closeButton: true,
+                                        progressBar: true,
+                                        timeOut: 2000
+                                    });
+                                    location.reload();
+                                }
+                            },
+                            error: function(xhr) {
+                                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                                    $.each(xhr.responseJSON.errors, function(key,
+                                        value) {
+                                        toastr.error(value.join('<br>'),
+                                            'Kesalahan Validasi', {
+                                                closeButton: true,
+                                                progressBar: true,
+                                                timeOut: 2000
+                                            });
+                                    });
+                                } else {
+                                    toastr.error(
+                                        'Terjadi kesalahan, silakan coba lagi.',
+                                        'Kesalahan', {
+                                            closeButton: true,
+                                            progressBar: true,
+                                            timeOut: 2000
+                                        });
+                                }
+                            }
+                        })
+                    }
+                })
+            })
+        });
+    </script>
 @endsection

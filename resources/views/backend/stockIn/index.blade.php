@@ -47,7 +47,7 @@
                                         <th width="3%">#</th>
                                         <th>Nama Barang</th>
                                         <th>Qty</th>
-                                        <th>Harga Satuan</th>
+                                        <th>Harga</th>
                                         <th>Supplier</th>
                                         <th>Tanggal</th>
                                         <th>Status</th>
@@ -95,15 +95,17 @@
                             <small class="text-danger errorItem"></small>
                         </div>
                         <div class="mb-3">
+                            <label for="price" class="form-label">Harga</label>
+                            <input type="number" name="price" id="price" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stock" class="form-label">Stok Tersedia</label>
+                            <input type="number" name="stock" id="stock" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
                             <label for="quantity" class="form-label">Qty <span class="text-danger">*</span></label>
                             <input type="number" name="quantity" id="quantity" class="form-control">
                             <small class="text-danger errorQuantity"></small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="unit_cost" class="form-label">Harga Satuan <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" name="unit_cost" id="unit_cost" class="form-control">
-                            <small class="text-danger errorUnitCost"></small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -120,13 +122,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/autonumeric/4.10.5/autoNumeric.min.js"></script>
 
     <script>
-        new AutoNumeric('#unit_cost', {
-            currencySymbol: 'Rp ',
-            decimalCharacter: ',',
-            digitGroupSeparator: '.',
-            decimalPlaces: 0,
-        });
-
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
@@ -153,8 +148,8 @@
                         name: 'quantity'
                     },
                     {
-                        data: 'unit_cost',
-                        name: 'unit_cost'
+                        data: 'price',
+                        name: 'price'
                     },
                     {
                         data: 'supplier',
@@ -191,22 +186,11 @@
                 $('#item').removeClass('is-invalid');
                 $('.errorItem').html('');
 
+                $('#price').removeClass('is-invalid');
+                $('.errorPrice').html('');
+
                 $('#quantity').removeClass('is-invalid');
                 $('.errorQuantity').html('');
-
-                $('#unit_cost').removeClass('is-invalid');
-                $('.errorUnitCost').html('');
-
-                if (AutoNumeric.getAutoNumericElement('#unit_cost')) {
-                    AutoNumeric.getAutoNumericElement('#unit_cost').remove();
-                }
-
-                new AutoNumeric('#unit_cost', {
-                    currencySymbol: 'Rp ',
-                    decimalCharacter: ',',
-                    digitGroupSeparator: '.',
-                    decimalPlaces: 0,
-                });
             });
 
             $('body').on('click', '#btnEdit', function() {
@@ -226,16 +210,17 @@
                         $('#item').removeClass('is-invalid');
                         $('.errorItem').html('');
 
+                        $('#price').removeClass('is-invalid');
+                        $('.errorPrice').html('');
+
                         $('#quantity').removeClass('is-invalid');
                         $('.errorQuantity').html('');
-
-                        $('#unit_cost').removeClass('is-invalid');
-                        $('.errorUnitCost').html('');
 
                         $('#id').val(response.id);
                         $('#supplier').val(response.supplier_id);
 
                         $('#item').prop('disabled', false);
+
                         $.ajax({
                             url: "{{ route('items.by.supplier') }}",
                             type: 'GET',
@@ -247,10 +232,18 @@
                                     '<option value="">-- Pilih Barang --</option>';
                                 items.forEach(function(item) {
                                     options +=
-                                        `<option value="${item.id}" ${item.id == response.item_id ? 'selected' : ''}>${item.name}</option>`;
+                                        `<option value="${item.id}" data-price="${item.price} data-stock="${item.stock}" ${item.id == response.item_id ? 'selected' : ''}>${item.name}</option>`;
                                 });
                                 $('#item').html(options);
                                 $('#item').val(response.item_id);
+
+                                const selectedItem = $('#item option:selected');
+                                if (selectedItem.val()) {
+                                    const itemPrice = selectedItem.data('price');
+                                    const itemStock = selectedItem.data('stock');
+                                    $('#price').val(itemPrice);
+                                    $('#stock').val(itemStock);
+                                }
                             },
                             error: function(xhr) {
                                 toastr.error('Gagal mengambil data barang',
@@ -263,18 +256,6 @@
                         });
 
                         $('#quantity').val(response.quantity);
-
-
-                        if (AutoNumeric.getAutoNumericElement('#unit_cost')) {
-                            AutoNumeric.getAutoNumericElement('#unit_cost').remove();
-                        }
-
-                        new AutoNumeric('#unit_cost', response.unit_cost, {
-                            currencySymbol: 'Rp ',
-                            decimalCharacter: ',',
-                            digitGroupSeparator: '.',
-                            decimalPlaces: 0
-                        });
                     }
                 });
             })
@@ -285,6 +266,7 @@
 
                 if (!supplierId) {
                     itemSelect.html('<option value="">-- Pilih Barang --</option>').prop('disabled', true);
+                    $('#price').val(''); // Reset price when supplier changes
                     return;
                 }
 
@@ -300,7 +282,7 @@
                         let options = '<option value="">-- Pilih Barang --</option>';
                         response.forEach(function(item) {
                             options +=
-                                `<option value="${item.id}">${item.name}</option>`;
+                                `<option value="${item.id}" data-price="${item.price}" data-stock="${item.stock}"">${item.name}</option>`;
                         });
                         itemSelect.html(options);
                     },
@@ -315,12 +297,41 @@
                 });
             });
 
+            // Event listener for item change to update price
+            $('#item').on('change', function() {
+                const selectedItem = $(this).find('option:selected');
+                if (selectedItem.val()) {
+                    const itemPrice = selectedItem.data('price');
+                    const itemStock = selectedItem.data('stock');
+
+                    $('#price').val(itemPrice);
+                    $('#stock').val(itemStock);
+                } else {
+                    $('#price').val('');
+                    $('#stock').val('');
+                }
+            });
+
             $('#modal').on('hidden.bs.modal', function() {
                 $('#item').html('<option value="">-- Pilih Barang --</option>').prop('disabled', true);
+                $('#price').val(''); // Reset price when modal is closed
             });
 
             $('#form').submit(function(e) {
                 e.preventDefault();
+
+                const quantity = parseInt($('#quantity').val());
+                const stock = parseInt($('#stock').val());
+
+                if (quantity > stock) {
+                    toastr.error('Jumlah yang dimasukkan melebihi stok tersedia!', 'Kesalahan', {
+                        closeButton: true,
+                        progressBar: true,
+                        timeOut: 2000
+                    });
+                    return;
+                }
+
                 $.ajax({
                     data: $(this).serialize(),
                     url: "{{ route('stockIn.store') }}",
@@ -354,6 +365,15 @@
                                 $('.errorItem').html('');
                             }
 
+                            if (response.errors.price) {
+                                $('#price').addClass('is-invalid');
+                                $('.errorPrice').html(response.errors.price.join(
+                                    '<br>'));
+                            } else {
+                                $('#price').removeClass('is-invalid');
+                                $('.errorPrice').html('');
+                            }
+
                             if (response.errors.quantity) {
                                 $('#quantity').addClass('is-invalid');
                                 $('.errorQuantity').html(response.errors.quantity.join(
@@ -361,15 +381,6 @@
                             } else {
                                 $('#quantity').removeClass('is-invalid');
                                 $('.errorQuantity').html('');
-                            }
-
-                            if (response.errors.unit_cost) {
-                                $('#unit_cost').addClass('is-invalid');
-                                $('.errorUnitCost').html(response.errors.unit_cost.join(
-                                    '<br>'));
-                            } else {
-                                $('#unit_cost').removeClass('is-invalid');
-                                $('.errorUnitCost').html('');
                             }
                         } else {
                             $('#modal').modal('hide');

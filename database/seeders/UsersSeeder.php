@@ -44,6 +44,16 @@ class UsersSeeder extends Seeder
                 'role' => "owner",
                 'status' => 0,
             ],
+
+            [
+                'id' => Uuid::uuid4()->toString(),
+                'first_name' => 'Cashier',
+                'email' => 'cashier@gmail.com',
+                'telephone' => '62895617545320',
+                'password' => bcrypt('123456789'),
+                'role' => "cashier",
+                'status' => 0,
+            ],
         ];
 
         foreach ($users as $user) {

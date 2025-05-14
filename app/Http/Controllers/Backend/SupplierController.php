@@ -23,6 +23,11 @@ class SupplierController extends Controller
         ->addIndexColumn()
         ->addColumn('status', function ($data) {
           $checked = $data->status == '0' ? 'checked' : '';
+          if (auth()->user()->role == 'warehouse') {
+            return '<span class="badge ' . ($data->status == '0' ? 'bg-success' : 'bg-danger') . '">'
+              . ($data->status == '0' ? 'Aktif' : 'Tidak Aktif') . '</span>';
+          }
+
           return '<div class="form-check form-switch">
                       <input class="form-check-input status-toggle" type="checkbox" role="switch" data-id="' . $data->id . '" ' . $checked . '>
                       <label class="form-check-label" for="status">' . ($data->status == '0' ? 'Aktif' : 'Tidak Aktif') . '</label>
@@ -61,12 +66,13 @@ class SupplierController extends Controller
       $request->all(),
       [
         'first_name' => 'required',
-        'email' => 'required|unique:users,email,' . $id,
+        'email' => 'required|email|unique:users,email,' . $id,
         'telephone' => 'required|min:11|max:13|unique:users,telephone,' . $id,
       ],
       [
         'first_name.required' => 'Silakan isi nama terlebih dahulu',
         'email.required' => 'Silakan isi email terlebih dahulu',
+        'email.email' => 'Format email tidak valid',
         'email.unique' => 'Email sudah digunakan',
         'telephone.required' => 'Silakan isi no telepon terlebih dahulu',
         'telephone.min' => 'No telepon :min karakter',
@@ -87,11 +93,11 @@ class SupplierController extends Controller
         ];
 
         if (!$id) {
+          $userData['status'] = auth()->user()->role == 'warehouse' ? '1' : '0';
           $userData['password'] = Hash::make('123456789');
         }
 
         User::updateOrCreate(['id' => $id], $userData);
-
         return response()->json([
           'status' => 'success',
           'message' => 'Data berhasil disimpan.',

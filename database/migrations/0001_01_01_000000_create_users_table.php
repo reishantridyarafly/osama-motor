@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('avatar')->default('avatar.png');
-            $table->enum('role', ['warehouse', 'supplier', 'owner'])->default('warehouse');
+            $table->enum('role', ['warehouse', 'supplier', 'owner', 'cashier']);
             $table->boolean('status')->default(0)->comment('0 = Active, 1 = Inactive');
             $table->rememberToken();
             $table->timestamps();

@@ -45,8 +45,8 @@
                                         <th width="3%">#</th>
                                         <th>Nama</th>
                                         <th>Stok</th>
+                                        <th>Harga</th>
                                         <th>Kategori</th>
-                                        <th>Supplier</th>
                                         <th width="10%">Aksi</th>
                                     </tr>
                                 </thead>
@@ -77,6 +77,16 @@
                             <small class="text-danger errorName"></small>
                         </div>
                         <div class="mb-3">
+                            <label for="stock" class="form-label">Stok <span class="text-danger">*</span></label>
+                            <input type="number" id="stock" name="stock" class="form-control">
+                            <small class="text-danger errorStock"></small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Harga <span class="text-danger">*</span></label>
+                            <input type="number" id="price" name="price" class="form-control">
+                            <small class="text-danger errorPrice"></small>
+                        </div>
+                        <div class="mb-3">
                             <label for="category" class="form-label">Kategori <span class="text-danger">*</span></label>
                             <select name="category" id="category" class="form-control">
                                 <option value="">-- Pilih kategori --</option>
@@ -85,16 +95,6 @@
                                 @endforeach
                             </select>
                             <small class="text-danger errorCategory"></small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="supplier" class="form-label">Supplier <span class="text-danger">*</span></label>
-                            <select name="supplier" id="supplier" class="form-control">
-                                <option value="">-- Pilih Supplier --</option>
-                                @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier->id }}">{{ $supplier->first_name }}</option>
-                                @endforeach
-                            </select>
-                            <small class="text-danger errorSupplier"></small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -131,16 +131,16 @@
                         name: 'name'
                     },
                     {
-                        data: 'total_stock',
-                        name: 'total_stock'
+                        data: 'stock',
+                        name: 'stock'
+                    },
+                    {
+                        data: 'price',
+                        name: 'price'
                     },
                     {
                         data: 'category',
                         name: 'category'
-                    },
-                    {
-                        data: 'supplier',
-                        name: 'supplier'
                     },
                     {
                         data: 'action',
@@ -160,11 +160,14 @@
                 $('#name').removeClass('is-invalid');
                 $('.errorName').html('');
 
+                $('#stock').removeClass('is-invalid');
+                $('.errorStock').html('');
+
+                $('#price').removeClass('is-invalid');
+                $('.errorPrice').html('');
+
                 $('#category').removeClass('is-invalid');
                 $('.errorCategory').html('');
-
-                $('#supplier').removeClass('is-invalid');
-                $('.errorSupplier').html('');
             });
 
             $('body').on('click', '#btnEdit', function() {
@@ -181,16 +184,20 @@
                         $('#name').removeClass('is-invalid');
                         $('.errorName').html('');
 
+                        $('#stock').removeClass('is-invalid');
+                        $('.errorStock').html('');
+
+                        $('#price').removeClass('is-invalid');
+                        $('.errorPrice').html('');
+
                         $('#category').removeClass('is-invalid');
                         $('.errorCategory').html('');
 
-                        $('#supplier').removeClass('is-invalid');
-                        $('.errorSupplier').html('');
-
                         $('#id').val(response.id);
                         $('#name').val(response.name);
+                        $('#stock').val(response.stock);
+                        $('#price').val(response.price);
                         $('#category').val(response.category_id);
-                        $('#supplier').val(response.supplier_id);
                     }
                 });
             })
@@ -221,6 +228,23 @@
                                 $('.errorName').html('');
                             }
 
+                            if (response.errors.stock) {
+                                $('#stock').addClass('is-invalid');
+                                $('.errorStock').html(response.errors.stock.join(
+                                    '<br>'));
+                            } else {
+                                $('#stock').removeClass('is-invalid');
+                                $('.errorStock').html('');
+                            }
+                            if (response.errors.price) {
+                                $('#price').addClass('is-invalid');
+                                $('.errorPrice').html(response.errors.price.join(
+                                    '<br>'));
+                            } else {
+                                $('#price').removeClass('is-invalid');
+                                $('.errorPrice').html('');
+                            }
+
                             if (response.errors.category) {
                                 $('#category').addClass('is-invalid');
                                 $('.errorCategory').html(response.errors.category.join(
@@ -228,15 +252,6 @@
                             } else {
                                 $('#category').removeClass('is-invalid');
                                 $('.errorCategory').html('');
-                            }
-
-                            if (response.errors.supplier) {
-                                $('#supplier').addClass('is-invalid');
-                                $('.errorSupplier').html(response.errors.supplier.join(
-                                    '<br>'));
-                            } else {
-                                $('#supplier').removeClass('is-invalid');
-                                $('.errorSupplier').html('');
                             }
                         } else {
                             $('#modal').modal('hide');

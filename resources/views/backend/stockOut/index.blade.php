@@ -30,7 +30,7 @@
             <div class="datatables">
                 <div class="card">
                     <div class="card-body">
-                        @if (auth()->user()->role == 'warehouse')
+                        @if (auth()->user()->role == 'cashier')
                             <div class="ms-auto">
                                 <div class="d-flex justify-content-end mb-3">
                                     <button class="btn btn-primary" id="btnAdd">
@@ -47,8 +47,9 @@
                                         <th width="3%">#</th>
                                         <th>Nama Barang</th>
                                         <th>Qty</th>
-                                        <th>Harga</th>
+                                        <th>Harga Jual</th>
                                         <th>Tanggal</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -71,21 +72,53 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <input type="hidden" name="id" id="id">
-                            <label for="item" class="form-label">Barang <span class="text-danger">*</span></label>
-                            <select class="form-control" id="item" name="item">
-                                <option value="">-- Pilih Barang --</option>
-                                @foreach ($items as $item)
-                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
-                                @endforeach
-                            </select>
-                            <small class="text-danger errorItem"></small>
+                        <div id="item-container">
+                            <div class="item-row mb-4 border-bottom pb-3">
+                                <div class="row">
+                                    <div class="col-md-12 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Item #1</h5>
+                                            <button type="button" class="btn btn-sm btn-danger btn-remove-item d-none">
+                                                <i class="ti ti-trash"></i> Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="item-0" class="form-label">Barang <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-control item-select" data-index="0" id="item-0"
+                                            name="items[0][id]">
+                                            <option value="">-- Pilih Barang --</option>
+                                            @foreach ($items as $item)
+                                                <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-danger error-item-0"></small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="quantity-0" class="form-label">Qty <span
+                                                class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" name="items[0][quantity]" id="quantity-0"
+                                                class="form-control item-quantity" data-index="0">
+                                            <span class="input-group-text stock-info" id="stock-info-0">Stok: -</span>
+                                        </div>
+                                        <small class="text-danger error-quantity-0"></small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_sale-0" class="form-label">Harga Jual <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" name="items[0][price_sale]" id="price_sale-0"
+                                            class="form-control">
+                                        <small class="text-danger error-price_sale-0"></small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="quantity" class="form-label">Qty <span class="text-danger">*</span></label>
-                            <input type="number" name="quantity" id="quantity" class="form-control">
-                            <small class="text-danger errorQuantity"></small>
+                        <div class="d-flex justify-content-center">
+                            <button type="button" class="btn btn-info" id="add-item-btn">
+                                <i class="ti ti-plus me-1"></i> Tambah Item
+                            </button>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -107,6 +140,8 @@
                 }
             });
 
+            let itemCount = 1;
+
             $('#datatable').DataTable({
                 processing: true,
                 serverside: true,
@@ -126,36 +161,98 @@
                         name: 'quantity'
                     },
                     {
-                        data: 'unit_price',
-                        name: 'unit_price'
+                        data: 'price_sale',
+                        name: 'price_sale'
                     },
                     {
                         data: 'date',
                         name: 'date'
                     },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
                 ]
             });
 
             $('#btnAdd').click(function() {
-                $('#id').val('');
                 $('#modalLabel').html("Tambah Barang Keluar");
                 $('#modal').modal('show');
-                $('#form').trigger("reset");
-
-                $('#item').removeClass('is-invalid');
-                $('.errorItem').html('');
-
-                $('#quantity').removeClass('is-invalid');
-                $('.errorQuantity').html('');
+                resetForm();
             });
 
+            // Add item row
+            $('#add-item-btn').click(function() {
+                addItemRow();
+            });
+
+            // Remove item row
+            $(document).on('click', '.btn-remove-item', function() {
+                $(this).closest('.item-row').remove();
+                updateItemNumbers();
+                if (itemCount === 1) {
+                    $('.btn-remove-item').addClass('d-none');
+                }
+            });
+
+            // Check stock availability when item is selected
+            $(document).on('change', '.item-select', function() {
+                const index = $(this).data('index');
+                const itemId = $(this).val();
+
+                if (itemId) {
+                    checkItemStock(itemId, index);
+                } else {
+                    $(`#stock-info-${index}`).text('Stok: -');
+                }
+            });
 
             $('#form').submit(function(e) {
                 e.preventDefault();
+
+                // Reset error messages
+                $('.text-danger').html('');
+
+                // Serialize form data
+                const formData = $(this).serializeArray();
+
+                // Process data into proper structure
+                let items = [];
+                let currentItem = {};
+                let currentIndex = -1;
+
+                formData.forEach(field => {
+                    const match = field.name.match(/items\[(\d+)\]\[(\w+)\]/);
+                    if (match) {
+                        const index = parseInt(match[1]);
+                        const key = match[2];
+
+                        // If we moved to a new index, push the previous item and start a new one
+                        if (index !== currentIndex) {
+                            if (currentIndex !== -1) {
+                                items.push(currentItem);
+                            }
+                            currentItem = {};
+                            currentIndex = index;
+                        }
+
+                        currentItem[key] = field.value;
+                    }
+                });
+
+                // Push the last item
+                if (Object.keys(currentItem).length > 0) {
+                    items.push(currentItem);
+                }
+
                 $.ajax({
-                    data: $(this).serialize(),
                     url: "{{ route('stockOut.store') }}",
                     type: "POST",
+                    data: {
+                        items: items
+                    },
                     dataType: 'json',
                     beforeSend: function() {
                         $('#save').attr('disabled', 'disabled');
@@ -166,51 +263,55 @@
                         $('#save').text('Simpan');
                     },
                     success: function(response) {
-                        if (response.errors) {
-                            if (response.errors.item) {
-                                $('#item').addClass('is-invalid');
-                                $('.errorItem').html(response.errors.item.join(
-                                    '<br>'));
-                            } else {
-                                $('#item').removeClass('is-invalid');
-                                $('.errorItem').html('');
-                            }
-
-                            if (response.errors.quantity) {
-                                $('#quantity').addClass('is-invalid');
-                                $('.errorQuantity').html(response.errors.quantity.join(
-                                    '<br>'));
-                            } else {
-                                $('#quantity').removeClass('is-invalid');
-                                $('.errorQuantity').html('');
-                            }
-                        } else {
+                        if (response.status === 'success') {
                             $('#modal').modal('hide');
-                            $('#form').trigger("reset");
+                            resetForm();
                             toastr.success(response.message, 'Sukses', {
                                 closeButton: true,
                                 progressBar: true,
                                 timeOut: 2000
                             });
-                            $('#datatable').DataTable().ajax.reload()
+                            $('#datatable').DataTable().ajax.reload();
+                        } else if (response.status === 'partial_success') {
+                            // Display partial success message
+                            let errorMsg =
+                                'Beberapa item tidak dapat diproses karena stok tidak mencukupi:\n';
+                            response.failed_items.forEach(item => {
+                                errorMsg +=
+                                    `- ${item.item_name}: Stok tersedia ${item.available}, diminta ${item.requested}\n`;
+                            });
+
+                            toastr.warning(errorMsg, 'Sebagian Berhasil', {
+                                closeButton: true,
+                                progressBar: true,
+                                timeOut: 5000
+                            });
+
+                            if (response.success_items.length > 0) {
+                                $('#datatable').DataTable().ajax.reload();
+                            }
                         }
                     },
                     error: function(xhr) {
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            toastr.error(xhr.responseJSON.error, 'Kesalahan Stok', {
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors;
+
+                            // Handle validation errors for each item
+                            for (const [key, messages] of Object.entries(errors)) {
+                                // Parse the error key to get the index and field
+                                // Format: items.0.id, items.0.quantity, etc.
+                                const keyParts = key.split('.');
+                                if (keyParts.length === 3) {
+                                    const index = keyParts[1];
+                                    const field = keyParts[2];
+                                    $(`.error-${field}-${index}`).html(messages.join('<br>'));
+                                }
+                            }
+                        } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                            toastr.error(xhr.responseJSON.error, 'Kesalahan', {
                                 closeButton: true,
                                 progressBar: true,
                                 timeOut: 2000
-                            });
-                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function(key,
-                                value) {
-                                toastr.error(value.join('<br>'),
-                                    'Kesalahan Validasi', {
-                                        closeButton: true,
-                                        progressBar: true,
-                                        timeOut: 2000
-                                    });
                             });
                         } else {
                             toastr.error(
@@ -223,6 +324,108 @@
                         }
                     }
                 });
+            });
+
+            function checkItemStock(itemId, index) {
+                $.ajax({
+                    url: "{{ route('stockOut.getItemStock') }}",
+                    type: "GET",
+                    data: {
+                        item_id: itemId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        $(`#stock-info-${index}`).text(`Stok: ${response.available}`);
+                        $(`#stock-info-${index}`).data('stock', response.available);
+                    },
+                    error: function() {
+                        $(`#stock-info-${index}`).text('Stok: Error');
+                    }
+                });
+            }
+
+            function addItemRow() {
+                const index = itemCount;
+                const newRow = `
+                    <div class="item-row mb-4 border-bottom pb-3">
+                        <div class="row">
+                            <div class="col-md-12 mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Item #${index + 1}</h5>
+                                    <button type="button" class="btn btn-sm btn-danger btn-remove-item">
+                                        <i class="ti ti-trash"></i> Hapus
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="item-${index}" class="form-label">Barang <span class="text-danger">*</span></label>
+                                <select class="form-control item-select" data-index="${index}" id="item-${index}" name="items[${index}][id]">
+                                    <option value="">-- Pilih Barang --</option>
+                                    @foreach ($items as $item)
+                                        <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-danger error-item-${index}"></small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="quantity-${index}" class="form-label">Qty <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" name="items[${index}][quantity]" id="quantity-${index}" class="form-control item-quantity" data-index="${index}">
+                                    <span class="input-group-text stock-info" id="stock-info-${index}">Stok: -</span>
+                                </div>
+                                <small class="text-danger error-quantity-${index}"></small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="price_sale-${index}" class="form-label">Harga Jual <span class="text-danger">*</span></label>
+                                <input type="number" name="items[${index}][price_sale]" id="price_sale-${index}" class="form-control">
+                                <small class="text-danger error-price_sale-${index}"></small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $('#item-container').append(newRow);
+                itemCount++;
+
+                // Show all remove buttons if we have more than one item
+                if (itemCount > 1) {
+                    $('.btn-remove-item').removeClass('d-none');
+                }
+            }
+
+            function updateItemNumbers() {
+                $('.item-row').each(function(i) {
+                    $(this).find('h5').text(`Item #${i + 1}`);
+                });
+                itemCount = $('.item-row').length;
+            }
+
+            function resetForm() {
+                $('#form').trigger("reset");
+                // Remove all item rows except the first one
+                $('.item-row:not(:first)').remove();
+
+                // Reset the first row
+                $('#item-0').val('');
+                $('#quantity-0').val('');
+                $('#price_sale-0').val('');
+                $('#stock-info-0').text('Stok: -');
+
+                // Hide the remove button on the first row
+                $('.btn-remove-item').addClass('d-none');
+
+                // Reset error messages
+                $('.text-danger').html('');
+
+                // Reset counter
+                itemCount = 1;
+            }
+
+            $(document).on('click', '#btnPrint', function() {
+                const id = $(this).data('id');
+                const url = `/barang-keluar/print/${id}`;
+
+                window.open(url, '_blank');
             });
         });
     </script>
