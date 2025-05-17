@@ -49,6 +49,7 @@ class StockOutController extends Controller
 
     return view('backend.stockOut.index', compact(['items']));
   }
+
   public function getItemStock(Request $request)
   {
     $itemId = $request->input('item_id');
@@ -118,13 +119,15 @@ class StockOutController extends Controller
         $quantityToSell = $item['quantity'];
         $priceSale = $item['price_sale'];
 
+        // Get stock ordered by both date and time (created_at)
         $stockIns = StockIn::where('item_id', $itemId)
           ->where('quantity', '>', 0)
-          ->orderBy('date', 'asc')
+          ->orderBy('created_at', 'asc')
           ->get();
 
         $price_buy = $stockIns->first()->price_buy;
         $totalAvailable = $stockIns->sum('quantity');
+
         if ($totalAvailable < $quantityToSell) {
           $itemName = Item::find($itemId)->name ?? "ID: $itemId";
           $failedItems[] = [
