@@ -152,6 +152,7 @@ class ItemController extends Controller
     {
         $items = Item::where('supplier_id', $request->supplier_id)
             ->where('stock', '>', 0)
+            ->orderBy('name', 'asc')
             ->get();
         return response()->json($items);
     }

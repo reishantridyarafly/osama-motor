@@ -55,7 +55,7 @@
                     </li>
                 @endif
 
-                @if (auth()->user()->role == 'warehouse')
+                @if (auth()->user()->role == 'warehouse' || auth()->user()->role == 'owner')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['stockIn.*']) ? 'active' : '' }}"
                             href="{{ route('stockIn.index') }}">
@@ -65,6 +65,8 @@
                             <span class="hide-menu">Barang Masuk</span>
                         </a>
                     </li>
+                @endif
+                @if (auth()->user()->role == 'warehouse')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['stock.*']) ? 'active' : '' }}"
                             href="{{ route('stock.index') }}">
@@ -75,7 +77,7 @@
                         </a>
                     </li>
                 @endif
-                @if (auth()->user()->role == 'cashier')
+                @if (auth()->user()->role == 'cashier' || auth()->user()->role == 'owner')
                     <li class="sidebar-item">
                         <a class="sidebar-link {{ request()->routeIs(['stockOut.*']) ? 'active' : '' }}"
                             href="{{ route('stockOut.index') }}">

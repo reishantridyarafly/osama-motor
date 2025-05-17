@@ -123,6 +123,7 @@ class StockOutController extends Controller
           ->orderBy('date', 'asc')
           ->get();
 
+        $price_buy = $stockIns->first()->price_buy;
         $totalAvailable = $stockIns->sum('quantity');
         if ($totalAvailable < $quantityToSell) {
           $itemName = Item::find($itemId)->name ?? "ID: $itemId";
@@ -167,6 +168,7 @@ class StockOutController extends Controller
         $stockOut = new StockOut();
         $stockOut->quantity = $quantityToSell;
         $stockOut->date = now();
+        $stockOut->price_buy = $price_buy;
         $stockOut->price_sale = $priceSale;
         $stockOut->item_id = $itemId;
         $stockOut->cashier_id = auth()->user()->id;

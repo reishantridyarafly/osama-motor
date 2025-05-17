@@ -15,6 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->integer('quantity')->default(0);
             $table->date('date');
+            $table->integer('price_buy');
             $table->integer('price_sale');
             $table->string('customer_name')->nullable();
             $table->uuid('item_id');

@@ -15,6 +15,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->integer('quantity')->default(0);
             $table->date('date');
+            $table->integer('price_buy');
+            $table->integer('price_sale');
             $table->enum('status', ['request', 'accepted', 'rejected'])->default('request');
             $table->uuid('item_id');
             $table->foreign('item_id')->references('id')->on('items')->onDelete('cascade');

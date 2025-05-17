@@ -115,32 +115,50 @@
             <th>Tanggal</th>
             <th>Item</th>
             <th>Qty</th>
+            <th>Harga Beli</th>
             <th>Harga Jual</th>
             <th>Total Penjualan</th>
+            <th>Keuntungan</th>
         </tr>
         @forelse ($stockOuts as $stockOut)
             <tr>
                 <td>{{ \Carbon\Carbon::parse($stockOut->date)->translatedFormat('l, d F Y') }}</td>
                 <td>{{ $stockOut->item->name }}</td>
                 <td class="quantity-column">{{ $stockOut->quantity }}</td>
-                <td class="price-column">{{ 'Rp ' . number_format($stockOut->item->price, 0, ',', '.') }}</td>
+                <td class="price-column">{{ 'Rp ' . number_format($stockOut->price_buy, 0, ',', '.') }}</td>
+                <td class="price-column">{{ 'Rp ' . number_format($stockOut->price_sale, 0, ',', '.') }}</td>
                 <td class="price-column">
-                    {{ 'Rp ' . number_format($stockOut->quantity * $stockOut->item->price, 0, ',', '.') }}</td>
+                    {{ 'Rp ' . number_format($stockOut->quantity * $stockOut->price_sale, 0, ',', '.') }}</td>
+                <td class="price-column">
+                    {{ 'Rp ' . number_format($stockOut->quantity * ($stockOut->price_sale - $stockOut->price_buy), 0, ',', '.') }}
+                </td>
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="no-data">Data tidak tersedia</td>
+                <td colspan="7" class="no-data">Data tidak tersedia</td>
             </tr>
         @endforelse
         <tr class="total-row">
             <td colspan="2" style="text-align: right;">TOTAL</td>
             <td class="quantity-column">{{ $total_quantity }}</td>
             <td></td>
+            <td></td>
             <td class="price-column">
                 {{ 'Rp ' .
                     number_format(
                         $stockOuts->sum(function ($stockOut) {
-                            return $stockOut->quantity * $stockOut->item->price;
+                            return $stockOut->quantity * $stockOut->price_sale;
+                        }),
+                        0,
+                        ',',
+                        '.',
+                    ) }}
+            </td>
+            <td class="price-column">
+                {{ 'Rp ' .
+                    number_format(
+                        $stockOuts->sum(function ($stockOut) {
+                            return $stockOut->quantity * ($stockOut->price_sale - $stockOut->price_buy);
                         }),
                         0,
                         ',',
@@ -163,7 +181,7 @@
                     {{ 'Rp ' .
                         number_format(
                             $stockOuts->sum(function ($stockOut) {
-                                return $stockOut->quantity * $stockOut->unit_price;
+                                return $stockOut->quantity * $stockOut->price_sale;
                             }),
                             0,
                             ',',
