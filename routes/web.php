@@ -73,11 +73,11 @@ Route::middleware(['auth', 'role:owner,warehouse'])->group(function () {
     Route::get('/supplier/tambah', [App\Http\Controllers\Backend\SupplierController::class, 'create'])->name('supplier.create');
     Route::post('/supplier', [App\Http\Controllers\Backend\SupplierController::class, 'store'])->name('supplier.store');
     Route::get('/supplier/{id}/edit', [App\Http\Controllers\Backend\SupplierController::class, 'edit'])->name('supplier.edit');
+    Route::delete('/supplier/{id}', [App\Http\Controllers\Backend\SupplierController::class, 'destroy'])->name('supplier.destroy');
 });
 
 Route::middleware(['auth', 'role:owner'])->group(function () {
     Route::post('/supplier/updateStatus', [App\Http\Controllers\Backend\SupplierController::class, 'updateStatus'])->name('supplier.updateStatus');
-    Route::delete('/supplier/{id}', [App\Http\Controllers\Backend\SupplierController::class, 'destroy'])->name('supplier.destroy');
 
     Route::get('/laporan', [App\Http\Controllers\Backend\ReportController::class, 'index'])->name('report.index');
     Route::post('/laporan/print', [App\Http\Controllers\Backend\ReportController::class, 'print'])->name('report.print');
