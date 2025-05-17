@@ -222,6 +222,7 @@
                                                     <th>Nama Barang</th>
                                                     <th>Jumlah</th>
                                                     <th>Harga</th>
+                                                    <th>Total Harga</th>
                                                     <th>Tanggal Permintaan</th>
                                                     <th>Status</th>
                                                     <th>Aksi</th>
@@ -234,6 +235,9 @@
                                                         <td>{{ $request->item->name ?? 'N/A' }}</td>
                                                         <td>{{ $request->quantity }}</td>
                                                         <td>Rp {{ number_format($request->item->price, 0, ',', '.') }}</td>
+                                                        <td>Rp
+                                                            {{ number_format($request->item->price * $request->quantity, 0, ',', '.') }}
+                                                        </td>
                                                         <td>{{ \Carbon\Carbon::parse($request->date)->translatedFormat('d F Y') }}
                                                         </td>
                                                         <td>

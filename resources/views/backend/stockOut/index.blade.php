@@ -48,6 +48,7 @@
                                         <th>Nama Barang</th>
                                         <th>Qty</th>
                                         <th>Harga Jual</th>
+                                        <th>Total Harga</th>
                                         <th>Tanggal</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -64,7 +65,7 @@
 
     <!-- modal -->
     <div id="modal" class="modal fade" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <form id="form">
                     <div class="modal-header">
@@ -95,7 +96,7 @@
                                         </select>
                                         <small class="text-danger error-item-0"></small>
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label for="quantity-0" class="form-label">Qty <span
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
@@ -105,12 +106,17 @@
                                         </div>
                                         <small class="text-danger error-quantity-0"></small>
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label for="price_sale-0" class="form-label">Harga Jual <span
                                                 class="text-danger">*</span></label>
                                         <input type="number" name="items[0][price_sale]" id="price_sale-0"
                                             class="form-control">
                                         <small class="text-danger error-price_sale-0"></small>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="total_price-0" class="form-label">Total Harga</label>
+                                        <input type="number" class="form-control total-price" id="total_price-0"
+                                            name="items[0][total_price]" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -165,6 +171,10 @@
                         name: 'price_sale'
                     },
                     {
+                        data: 'total_price',
+                        name: 'total_price'
+                    },
+                    {
                         data: 'date',
                         name: 'date'
                     },
@@ -183,12 +193,10 @@
                 resetForm();
             });
 
-            // Add item row
             $('#add-item-btn').click(function() {
                 addItemRow();
             });
 
-            // Remove item row
             $(document).on('click', '.btn-remove-item', function() {
                 $(this).closest('.item-row').remove();
                 updateItemNumbers();
@@ -197,7 +205,7 @@
                 }
             });
 
-            // Check stock availability when item is selected
+            // Check stock availability and get sale price when item is selected
             $(document).on('change', '.item-select', function() {
                 const index = $(this).data('index');
                 const itemId = $(this).val();
@@ -206,19 +214,24 @@
                     checkItemStock(itemId, index);
                 } else {
                     $(`#stock-info-${index}`).text('Stok: -');
+                    $(`#price_sale-${index}`).val('');
+                    $(`#total_price-${index}`).val('');
                 }
+            });
+
+            // Calculate total price when quantity or price changes
+            $(document).on('input', '.item-quantity, [id^=price_sale-]', function() {
+                const index = $(this).data('index') || $(this).attr('id').split('-')[1];
+                calculateTotalPrice(index);
             });
 
             $('#form').submit(function(e) {
                 e.preventDefault();
 
-                // Reset error messages
                 $('.text-danger').html('');
 
-                // Serialize form data
                 const formData = $(this).serializeArray();
 
-                // Process data into proper structure
                 let items = [];
                 let currentItem = {};
                 let currentIndex = -1;
@@ -229,7 +242,6 @@
                         const index = parseInt(match[1]);
                         const key = match[2];
 
-                        // If we moved to a new index, push the previous item and start a new one
                         if (index !== currentIndex) {
                             if (currentIndex !== -1) {
                                 items.push(currentItem);
@@ -337,6 +349,13 @@
                     success: function(response) {
                         $(`#stock-info-${index}`).text(`Stok: ${response.available}`);
                         $(`#stock-info-${index}`).data('stock', response.available);
+
+                        // Set the sale price
+                        if (response.price_sale) {
+                            $(`#price_sale-${index}`).val(response.price_sale);
+                            // Calculate total price if quantity is already entered
+                            calculateTotalPrice(index);
+                        }
                     },
                     error: function() {
                         $(`#stock-info-${index}`).text('Stok: Error');
@@ -344,45 +363,57 @@
                 });
             }
 
+            function calculateTotalPrice(index) {
+                const quantity = parseFloat($(`#quantity-${index}`).val()) || 0;
+                const price = parseFloat($(`#price_sale-${index}`).val()) || 0;
+                const total = quantity * price;
+
+                $(`#total_price-${index}`).val(total);
+            }
+
             function addItemRow() {
                 const index = itemCount;
                 const newRow = `
-                    <div class="item-row mb-4 border-bottom pb-3">
-                        <div class="row">
-                            <div class="col-md-12 mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">Item #${index + 1}</h5>
-                                    <button type="button" class="btn btn-sm btn-danger btn-remove-item">
-                                        <i class="ti ti-trash"></i> Hapus
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <label for="item-${index}" class="form-label">Barang <span class="text-danger">*</span></label>
-                                <select class="form-control item-select" data-index="${index}" id="item-${index}" name="items[${index}][id]">
-                                    <option value="">-- Pilih Barang --</option>
-                                    @foreach ($items as $item)
-                                        <option value="{{ $item->id }}">{{ $item->name }}</option>
-                                    @endforeach
-                                </select>
-                                <small class="text-danger error-item-${index}"></small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="quantity-${index}" class="form-label">Qty <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" name="items[${index}][quantity]" id="quantity-${index}" class="form-control item-quantity" data-index="${index}">
-                                    <span class="input-group-text stock-info" id="stock-info-${index}">Stok: -</span>
-                                </div>
-                                <small class="text-danger error-quantity-${index}"></small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="price_sale-${index}" class="form-label">Harga Jual <span class="text-danger">*</span></label>
-                                <input type="number" name="items[${index}][price_sale]" id="price_sale-${index}" class="form-control">
-                                <small class="text-danger error-price_sale-${index}"></small>
-                            </div>
+            <div class="item-row mb-4 border-bottom pb-3">
+                <div class="row">
+                    <div class="col-md-12 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Item #${index + 1}</h5>
+                            <button type="button" class="btn btn-sm btn-danger btn-remove-item">
+                                <i class="ti ti-trash"></i> Hapus
+                            </button>
                         </div>
                     </div>
-                `;
+                    <div class="col-md-12 mb-3">
+                        <label for="item-${index}" class="form-label">Barang <span class="text-danger">*</span></label>
+                        <select class="form-control item-select" data-index="${index}" id="item-${index}" name="items[${index}][id]">
+                            <option value="">-- Pilih Barang --</option>
+                            @foreach ($items as $item)
+                                <option value="{{ $item->id }}">{{ $item->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-danger error-item-${index}"></small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="quantity-${index}" class="form-label">Qty <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" name="items[${index}][quantity]" id="quantity-${index}" class="form-control item-quantity" data-index="${index}">
+                            <span class="input-group-text stock-info" id="stock-info-${index}">Stok: -</span>
+                        </div>
+                        <small class="text-danger error-quantity-${index}"></small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="price_sale-${index}" class="form-label">Harga Jual <span class="text-danger">*</span></label>
+                        <input type="number" name="items[${index}][price_sale]" id="price_sale-${index}" class="form-control" data-index="${index}">
+                        <small class="text-danger error-price_sale-${index}"></small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="total_price-${index}" class="form-label">Total Harga</label>
+                        <input type="number" class="form-control total-price" id="total_price-${index}" name="items[${index}][total_price]" readonly>
+                    </div>
+                </div>
+            </div>
+        `;
 
                 $('#item-container').append(newRow);
                 itemCount++;
@@ -409,6 +440,7 @@
                 $('#item-0').val('');
                 $('#quantity-0').val('');
                 $('#price_sale-0').val('');
+                $('#total_price-0').val('');
                 $('#stock-info-0').text('Stok: -');
 
                 // Hide the remove button on the first row

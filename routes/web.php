@@ -18,6 +18,8 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:warehouse,owner'])->group(function () {
     Route::get('/barang-masuk', [App\Http\Controllers\Backend\StockInController::class, 'index'])->name('stockIn.index');
+
+    Route::get('/stok-barang', [App\Http\Controllers\Backend\StockController::class, 'index'])->name('stock.index');
 });
 
 Route::middleware(['auth', 'role:owner,cashier'])->group(function () {
@@ -29,6 +31,9 @@ Route::middleware(['auth', 'role:warehouse'])->group(function () {
     Route::get('/barang-masuk/{id}/edit', [App\Http\Controllers\Backend\StockInController::class, 'edit'])->name('stockIn.edit');
     Route::post('/barang-masuk', [App\Http\Controllers\Backend\StockInController::class, 'store'])->name('stockIn.store');
     Route::delete('/barang-masuk/{id}', [App\Http\Controllers\Backend\StockInController::class, 'destroy'])->name('stockIn.destroy');
+
+    Route::get('/stok-barang/{id}/edit', [App\Http\Controllers\Backend\StockController::class, 'edit'])->name('stock.edit');
+    Route::post('/stok-barang', [App\Http\Controllers\Backend\StockController::class, 'store'])->name('stock.store');
 
     Route::get('/items-by-supplier', [App\Http\Controllers\Backend\ItemController::class, 'getItemsBySupplier'])->name('items.by.supplier');
 });

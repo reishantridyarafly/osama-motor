@@ -29,6 +29,10 @@ class StockOutController extends Controller
         ->addColumn('date', function ($data) {
           return \Carbon\Carbon::parse($data->created_at)->translatedFormat('l, d F Y H:i:s');
         })
+        ->addColumn('total_price', function ($data) {
+          $total_price = $data->quantity * $data->price_sale;
+          return 'Rp ' . number_format($total_price, 0, ',', '.');
+        })
         ->addColumn('action', function ($data) {
           return '
             <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2" id="btnPrint" data-id="' . $data->id . '">
@@ -45,7 +49,6 @@ class StockOutController extends Controller
 
     return view('backend.stockOut.index', compact(['items']));
   }
-
   public function getItemStock(Request $request)
   {
     $itemId = $request->input('item_id');
@@ -54,16 +57,29 @@ class StockOutController extends Controller
       return response()->json(['error' => 'Item ID is required'], 400);
     }
 
+    $item = Item::find($itemId);
+    if (!$item) {
+      return response()->json(['error' => 'Item not found'], 404);
+    }
+
     $stockIns = StockIn::where('item_id', $itemId)
       ->where('quantity', '>', 0)
+      ->where('status', 'accepted')
       ->orderBy('date', 'asc')
       ->get();
 
     $totalAvailable = $stockIns->sum('quantity');
 
+    $latestStock = StockIn::where('item_id', $itemId)
+      ->where('status', 'accepted')
+      ->orderBy('created_at', 'desc')
+      ->first();
+
     return response()->json([
       'available' => $totalAvailable,
-      'item_id' => $itemId
+      'item_id' => $itemId,
+      'item_name' => $item->name,
+      'price_sale' => $latestStock->price_sale ?? 0
     ]);
   }
 
@@ -74,6 +90,18 @@ class StockOutController extends Controller
       'items.*.id' => 'required|exists:items,id',
       'items.*.quantity' => 'required|integer|min:1',
       'items.*.price_sale' => 'required|numeric|min:0',
+    ], [
+      'items.required' => 'Data barang harus diisi',
+      'items.array' => 'Format data barang tidak valid',
+      'items.min' => 'Minimal 1 barang harus diisi',
+      'items.*.id.required' => 'ID barang harus diisi',
+      'items.*.id.exists' => 'Barang tidak ditemukan',
+      'items.*.quantity.required' => 'Jumlah barang harus diisi',
+      'items.*.quantity.integer' => 'Jumlah barang harus berupa angka',
+      'items.*.quantity.min' => 'Jumlah barang minimal 1',
+      'items.*.price_sale.required' => 'Harga jual harus diisi',
+      'items.*.price_sale.numeric' => 'Harga jual harus berupa angka',
+      'items.*.price_sale.min' => 'Harga jual tidak boleh negatif'
     ]);
 
     if ($validated->fails()) {

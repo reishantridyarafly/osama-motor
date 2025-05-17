@@ -65,6 +65,15 @@
                             <span class="hide-menu">Barang Masuk</span>
                         </a>
                     </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ request()->routeIs(['stock.*']) ? 'active' : '' }}"
+                            href="{{ route('stock.index') }}">
+                            <span>
+                                <i class="ti ti-package"></i>
+                            </span>
+                            <span class="hide-menu">Barang</span>
+                        </a>
+                    </li>
                 @endif
                 @if (auth()->user()->role == 'cashier')
                     <li class="sidebar-item">

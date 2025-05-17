@@ -83,6 +83,7 @@ class StockInController extends Controller
       'supplier' => 'required|exists:users,id',
       'item' => 'required|exists:items,id',
       'quantity' => 'required|integer|min:1',
+      'price_sale' => 'required|numeric|min:0',
     ], [
       'supplier.required' => 'Silakan pilih supplier terlebih dahulu.',
       'supplier.exists' => 'Supplier yang dipilih tidak valid.',
@@ -91,6 +92,9 @@ class StockInController extends Controller
       'quantity.required' => 'Silakan isi quantity terlebih dahulu.',
       'quantity.integer' => 'Quantity harus berupa angka bulat.',
       'quantity.min' => 'Quantity minimal 1.',
+      'price_sale.required' => 'Silakan isi harga jual terlebih dahulu.',
+      'price_sale.numeric' => 'Harga jual harus berupa angka.',
+      'price_sale.min' => 'Harga jual minimal 0.',
     ]);
 
     if ($validated->fails()) {
@@ -103,11 +107,14 @@ class StockInController extends Controller
             'quantity' => $request->quantity,
             'item_id' => $request->item,
             'supplier_id' => $request->supplier,
+            'price_sale' => $request->price_sale,
           ]);
         } else {
           StockIn::create([
             'quantity' => $request->quantity,
             'date' => now(),
+            'price_buy' => $request->price,
+            'price_sale' => $request->price_sale,
             'item_id' => $request->item,
             'supplier_id' => $request->supplier,
           ]);

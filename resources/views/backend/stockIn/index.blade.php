@@ -47,7 +47,7 @@
                                         <th width="3%">#</th>
                                         <th>Nama Barang</th>
                                         <th>Qty</th>
-                                        <th>Harga</th>
+                                        <th>Harga Beli</th>
                                         <th>Supplier</th>
                                         <th>Tanggal</th>
                                         <th>Status</th>
@@ -96,11 +96,16 @@
                         </div>
                         <div class="mb-3">
                             <label for="price" class="form-label">Harga</label>
-                            <input type="number" name="price" id="price" class="form-control" disabled>
+                            <input type="number" name="price" id="price" class="form-control" readonly>
                         </div>
                         <div class="mb-3">
                             <label for="stock" class="form-label">Stok Tersedia</label>
                             <input type="number" name="stock" id="stock" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price_sale" class="form-label">Harga Jual <span class="text-danger">*</span></label>
+                            <input type="number" name="price_sale" id="price_sale" class="form-control">
+                            <small class="text-danger errorPriceSale"></small>
                         </div>
                         <div class="mb-3">
                             <label for="quantity" class="form-label">Qty <span class="text-danger">*</span></label>
@@ -186,8 +191,8 @@
                 $('#item').removeClass('is-invalid');
                 $('.errorItem').html('');
 
-                $('#price').removeClass('is-invalid');
-                $('.errorPrice').html('');
+                $('#price_sale').removeClass('is-invalid');
+                $('.errorPriceSale').html('');
 
                 $('#quantity').removeClass('is-invalid');
                 $('.errorQuantity').html('');
@@ -210,14 +215,17 @@
                         $('#item').removeClass('is-invalid');
                         $('.errorItem').html('');
 
-                        $('#price').removeClass('is-invalid');
-                        $('.errorPrice').html('');
+                        $('#price_sale').removeClass('is-invalid');
+                        $('.errorPriceSale').html('');
 
                         $('#quantity').removeClass('is-invalid');
                         $('.errorQuantity').html('');
 
                         $('#id').val(response.id);
                         $('#supplier').val(response.supplier_id);
+                        $('#price_sale').val(response.price_sale);
+                        $('#price').val(response.price);
+                        $('#stock').val(response.stock);
 
                         $('#item').prop('disabled', false);
 
@@ -232,7 +240,7 @@
                                     '<option value="">-- Pilih Barang --</option>';
                                 items.forEach(function(item) {
                                     options +=
-                                        `<option value="${item.id}" data-price="${item.price} data-stock="${item.stock}" ${item.id == response.item_id ? 'selected' : ''}>${item.name}</option>`;
+                                        `<option value="${item.id}" data-price="${item.price}" data-stock="${item.stock}" ${item.id == response.item_id ? 'selected' : ''}>${item.name}</option>`;
                                 });
                                 $('#item').html(options);
                                 $('#item').val(response.item_id);
@@ -266,7 +274,7 @@
 
                 if (!supplierId) {
                     itemSelect.html('<option value="">-- Pilih Barang --</option>').prop('disabled', true);
-                    $('#price').val(''); // Reset price when supplier changes
+                    $('#price').val('');
                     return;
                 }
 
@@ -282,7 +290,7 @@
                         let options = '<option value="">-- Pilih Barang --</option>';
                         response.forEach(function(item) {
                             options +=
-                                `<option value="${item.id}" data-price="${item.price}" data-stock="${item.stock}"">${item.name}</option>`;
+                                `<option value="${item.id}" data-price="${item.price}" data-stock="${item.stock}">${item.name}</option>`;
                         });
                         itemSelect.html(options);
                     },
@@ -297,7 +305,6 @@
                 });
             });
 
-            // Event listener for item change to update price
             $('#item').on('change', function() {
                 const selectedItem = $(this).find('option:selected');
                 if (selectedItem.val()) {
@@ -314,7 +321,7 @@
 
             $('#modal').on('hidden.bs.modal', function() {
                 $('#item').html('<option value="">-- Pilih Barang --</option>').prop('disabled', true);
-                $('#price').val(''); // Reset price when modal is closed
+                $('#price').val('');
             });
 
             $('#form').submit(function(e) {
@@ -365,13 +372,13 @@
                                 $('.errorItem').html('');
                             }
 
-                            if (response.errors.price) {
-                                $('#price').addClass('is-invalid');
-                                $('.errorPrice').html(response.errors.price.join(
+                            if (response.errors.price_sale) {
+                                $('#price_sale').addClass('is-invalid');
+                                $('.errorPriceSale').html(response.errors.price_sale.join(
                                     '<br>'));
                             } else {
-                                $('#price').removeClass('is-invalid');
-                                $('.errorPrice').html('');
+                                $('#price_sale').removeClass('is-invalid');
+                                $('.errorPriceSale').html('');
                             }
 
                             if (response.errors.quantity) {
