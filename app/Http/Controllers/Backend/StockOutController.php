@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon; // Pastikan Carbon diimport
 
 class StockOutController extends Controller
 {
@@ -35,9 +36,9 @@ class StockOutController extends Controller
         })
         ->addColumn('action', function ($data) {
           return '
-            <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2" id="btnPrint" data-id="' . $data->id . '">
-              <i class="ti ti-printer fs-5"></i>Print
-            </button>';
+                        <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2" id="btnPrint" data-id="' . $data->id . '">
+                            <i class="ti ti-printer fs-5"></i>Print
+                        </button>';
         })
         ->rawColumns(['action'])
         ->make(true);
@@ -49,6 +50,52 @@ class StockOutController extends Controller
 
     return view('backend.stockOut.index', compact(['items']));
   }
+
+  private function calculateSafetyStockAndROP($item_id)
+  {
+    $item = Item::find($item_id);
+    if (!$item) {
+      return ['safety_stock' => 0, 'reorder_point' => 0];
+    }
+
+    $stockIns = StockIn::where('item_id', $item->id)
+      ->where('status', 'accepted')
+      ->get();
+    if ($stockIns->isEmpty()) {
+      return ['safety_stock' => 0, 'reorder_point' => 0];
+    }
+    $stockOuts = StockOut::where('item_id', $item->id)->get();
+
+    $totalQuantityOut = $stockOuts->sum('quantity');
+    $totalDays = $stockOuts->count();
+    $averageDailyDemand = $totalDays > 0 ? $totalQuantityOut / $totalDays : 0;
+
+    $varianceDemand = $stockOuts->reduce(function ($carry, $stockOut) use ($averageDailyDemand) {
+      return $carry + pow($stockOut->quantity - $averageDailyDemand, 2);
+    }, 0);
+    $stdDevDemand = $totalDays > 0 ? sqrt($varianceDemand / $totalDays) : 0;
+
+    $totalLeadTimes = $stockIns->count(); // Menggunakan count sebagai proxy untuk lead time, perlu disesuaikan jika ada kolom lead time yang lebih spesifik
+    $averageLeadTime = $totalLeadTimes > 0 ? $stockIns->count() / $totalLeadTimes : 0; // Ini mungkin tidak akurat, perlu disesuaikan dengan data lead time sebenarnya
+
+    $varianceLeadTime = $stockIns->reduce(function ($carry, $stockIn) use ($averageLeadTime) {
+      $date = Carbon::parse($stockIn->date);
+      
+      return $carry + pow($date->diffInDays($date) - $averageLeadTime, 2);
+    }, 0);
+    $stdDevLeadTime = $totalLeadTimes > 0 ? sqrt($varianceLeadTime / $totalLeadTimes) : 0;
+
+    $z = 1.28; // Tingkat layanan untuk 90%
+
+    $safetyStock = $z * sqrt(pow($stdDevDemand, 2) + pow($stdDevLeadTime, 2));
+    $reorderPoint = $averageDailyDemand * $averageLeadTime + $safetyStock;
+
+    return [
+      'safety_stock' => ceil($safetyStock),
+      'reorder_point' => ceil($reorderPoint)
+    ];
+  }
+
 
   public function getItemStock(Request $request)
   {
@@ -71,13 +118,23 @@ class StockOutController extends Controller
 
     $totalAvailable = $stockIns->sum('quantity');
 
+    // Hitung safety stock untuk item ini
+    $safetyStockData = $this->calculateSafetyStockAndROP($itemId);
+    $safetyStock = $safetyStockData['safety_stock'];
+
+    // Stok yang aman untuk dijual adalah total available dikurangi safety stock
+    $sellableStock = max(0, $totalAvailable - $safetyStock);
+
+
     $latestStock = StockIn::where('item_id', $itemId)
       ->where('status', 'accepted')
       ->orderBy('created_at', 'desc')
       ->first();
 
     return response()->json([
-      'available' => $totalAvailable,
+      'available' => $totalAvailable, // Total stok yang ada
+      'sellable_stock' => $sellableStock, // Stok yang bisa dijual (setelah dikurangi safety stock)
+      'safety_stock_quantity' => $safetyStock, // Jumlah safety stock
       'item_id' => $itemId,
       'item_name' => $item->name,
       'price_sale' => $latestStock->price_sale ?? 0
@@ -122,50 +179,48 @@ class StockOutController extends Controller
         // Get stock ordered by both date and time (created_at)
         $stockIns = StockIn::where('item_id', $itemId)
           ->where('quantity', '>', 0)
+          ->where('status', 'accepted') // Pastikan hanya stok yang diterima
           ->orderBy('created_at', 'asc')
           ->get();
 
-        $price_buy = $stockIns->first()->price_buy;
         $totalAvailable = $stockIns->sum('quantity');
 
-        if ($totalAvailable < $quantityToSell) {
+        // Hitung safety stock untuk item ini
+        $safetyStockData = $this->calculateSafetyStockAndROP($itemId);
+        $safetyStock = $safetyStockData['safety_stock'];
+
+        // Stok yang aman untuk dijual adalah total available dikurangi safety stock
+        $sellableStock = max(0, $totalAvailable - $safetyStock);
+
+        if ($quantityToSell > $sellableStock) {
           $itemName = Item::find($itemId)->name ?? "ID: $itemId";
           $failedItems[] = [
             'item_name' => $itemName,
             'available' => $totalAvailable,
-            'requested' => $quantityToSell
+            'sellable_stock' => $sellableStock,
+            'safety_stock_quantity' => $safetyStock,
+            'requested' => $quantityToSell,
+            'message' => "Stok yang tersedia untuk dijual hanya {$sellableStock} (Total: {$totalAvailable}, Safety Stock: {$safetyStock})."
           ];
           continue;
         }
 
-        $totalQuantity = 0;
-        $batches = [];
-        $totalHpp = 0;
+        $price_buy = $stockIns->first()->price_buy ?? 0;
+        $totalQuantityDeducted = 0;
 
         foreach ($stockIns as $stockIn) {
-          if ($totalQuantity >= $quantityToSell) break;
+          if ($totalQuantityDeducted >= $quantityToSell) break;
 
-          $remainingQuantity = $quantityToSell - $totalQuantity;
-          $quantityFromBatch = min($stockIn->quantity, $remainingQuantity);
+          $remainingQuantityToDeduct = $quantityToSell - $totalQuantityDeducted;
+          $quantityFromBatch = min($stockIn->quantity, $remainingQuantityToDeduct);
 
-          $batches[] = [
-            'stock_in_id' => $stockIn->id,
-            'quantity' => $quantityFromBatch,
-            'unit_cost' => $stockIn->unit_cost,
-          ];
-
-          $totalQuantity += $quantityFromBatch;
-          $totalHpp += $quantityFromBatch * $stockIn->unit_cost;
-        }
-
-        foreach ($batches as $batch) {
-          $stockIn = StockIn::find($batch['stock_in_id']);
-          $stockIn->quantity -= $batch['quantity'];
+          $stockIn->quantity -= $quantityFromBatch;
           if ($stockIn->quantity == 0) {
             $stockIn->delete();
           } else {
             $stockIn->save();
           }
+          $totalQuantityDeducted += $quantityFromBatch;
         }
 
         $stockOut = new StockOut();
@@ -184,7 +239,7 @@ class StockOutController extends Controller
       if (count($failedItems) > 0) {
         return response()->json([
           'status' => 'partial_success',
-          'message' => 'Beberapa barang tidak dapat diproses karena stok tidak mencukupi.',
+          'message' => 'Penjualan sebagian berhasil. Beberapa barang tidak dapat diproses karena stok aman tidak mencukupi.',
           'success_items' => $results,
           'failed_items' => $failedItems
         ], 207);
@@ -198,7 +253,7 @@ class StockOutController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'status' => 'error',
-        'message' => 'Error occurred, please try again',
+        'message' => 'Terjadi kesalahan, silakan coba lagi.',
         'error' => $e->getMessage()
       ], 500);
     }

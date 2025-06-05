@@ -69,6 +69,8 @@ Route::middleware(['auth', 'role:supplier'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:owner,warehouse'])->group(function () {
+    Route::get('/api/safety-stock-notifications', [App\Http\Controllers\Backend\DashboardController::class, 'getSafetyStockNotifications'])->name('safetyStock.notifications');
+
     Route::get('/supplier', [App\Http\Controllers\Backend\SupplierController::class, 'index'])->name('supplier.index');
     Route::get('/supplier/tambah', [App\Http\Controllers\Backend\SupplierController::class, 'create'])->name('supplier.create');
     Route::post('/supplier', [App\Http\Controllers\Backend\SupplierController::class, 'store'])->name('supplier.store');

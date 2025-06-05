@@ -38,6 +38,7 @@
                                         <th>Nama Barang</th>
                                         <th>Qty</th>
                                         <th>Harga</th>
+                                        <th>Total</th>
                                         <th>Tanggal</th>
                                         <th width="10%">Status</th>
                                     </tr>
@@ -83,6 +84,10 @@
                     {
                         data: 'price',
                         name: 'price'
+                    },
+                    {
+                        data: 'total_price',
+                        name: 'total_price'
                     },
                     {
                         data: 'date',

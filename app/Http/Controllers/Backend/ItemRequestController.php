@@ -84,6 +84,9 @@ class ItemRequestController extends Controller
         ->addColumn('price', function ($data) {
           return 'Rp ' . number_format($data->item->price, 0, ',', '.');
         })
+        ->addColumn('total_price', function ($data) {
+          return 'Rp ' . number_format($data->item->price * $data->quantity, 0, ',', '.');
+        })
         ->addColumn('date', function ($data) {
           return \Carbon\Carbon::parse($data->date)->translatedFormat('l, d F Y');
         })
